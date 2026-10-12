@@ -24,6 +24,8 @@ export type ReportLine = {
   project: string | null;
   amount: number;
   reference: string | null;
+  /** number of receipt photos (reports made before receipts existed do not have it) */
+  receipts?: number;
 };
 
 export type ReportData = {

@@ -6,7 +6,9 @@ import { requireRole } from "@/lib/auth";
 import { fundSummary } from "@/lib/funds";
 import { DOC_STATUS } from "@/lib/roles";
 import { fmtDate, peso, todayManila } from "@/lib/format";
-import { addTransaction, createReport, setFund, voidTransaction } from "@/actions/finance";
+import { addReceipts, addTransaction, createReport, removeReceipt, setFund, voidTransaction } from "@/actions/finance";
+import ReceiptInput from "@/components/ReceiptInput";
+import { aiConfigured } from "@/lib/ai";
 
 export const metadata = { title: "Finance assistant" };
 export const maxDuration = 60;
@@ -17,11 +19,13 @@ export default async function TreasurerDesk({ searchParams }: { searchParams: Pr
   const user = await requireRole("treasurer", "chairperson");
   const sp = await searchParams;
   const isTreasurer = user.role === "treasurer";
+  const canRead = aiConfigured() && !!process.env.NEBIUS_VISION_MODEL;
   const today = todayManila();
   const monthStart = `${today.slice(0, 7)}-01`;
   const [f, ledger, projects, reports] = await Promise.all([
     fundSummary(),
-    sql<Row[]>`select t.id, t.tx_date::text as tx_date, t.kind, t.description, t.reference, t.amount::float8 as amount, t.voided_at, t.void_reason, p.title as project
+    sql<Row[]>`select t.id, t.tx_date::text as tx_date, t.kind, t.description, t.reference, t.amount::float8 as amount, t.voided_at, t.void_reason, p.title as project,
+                 coalesce((select json_agg(json_build_object('id', r.id, 'public', r.is_public) order by r.id) from transaction_receipts r where r.transaction_id = t.id), '[]'::json) as receipts
                from transactions t left join projects p on p.id = t.project_id order by t.tx_date desc, t.id desc limit 40`,
     sql<Row[]>`select id, title from projects where status in ('approved','scheduled','ongoing','completed') order by id desc`,
     sql<Row[]>`select id, title, period, status from reports order by created_at desc`,
@@ -59,6 +63,10 @@ export default async function TreasurerDesk({ searchParams }: { searchParams: Pr
               <div><label className="label" htmlFor="project_id">Project (optional)</label><select id="project_id" name="project_id" className="input"><option value="">None</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div>
               <div><label className="label" htmlFor="reference">Receipt / OR no.</label><input id="reference" name="reference" className="input" /></div>
             </div>
+            <div className="rounded-xl border border-slate-200 bg-mist/50 p-4">
+              <ReceiptInput canRead={canRead} fill={{ amount: "amount", date: "tx_date", reference: "reference", description: "description" }} idPrefix="new" />
+              <p className="hint">{canRead ? "Sinag reads the receipt and fills in empty fields. Check them before saving." : "The photo is kept with the entry as proof of payment."}</p>
+            </div>
             <SubmitButton pending="Saving...">Save entry</SubmitButton>
           </form>
 
@@ -86,28 +94,87 @@ export default async function TreasurerDesk({ searchParams }: { searchParams: Pr
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-bold">Recent ledger</h2>
-        <div className="relative overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead><tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-3 pl-5 pr-2">Date</th><th className="pr-2">Description</th><th className="pr-2">Project</th><th className="pr-5 text-right">Amount</th>{isTreasurer && <th className="pr-5"><span className="sr-only">Void</span></th>}</tr></thead>
-            <tbody>
-              {ledger.map((t) => (
-                <tr key={t.id} className={`border-b border-slate-100 align-top ${t.voided_at ? "text-slate-400" : ""}`}>
-                  <td className="whitespace-nowrap py-3 pl-5 pr-2">{fmtDate(t.tx_date, "short")}</td>
-                  <td className="py-3 pr-2"><span className={t.voided_at ? "line-through" : ""}>{t.description}</span>{t.reference ? <span className="text-slate-400"> ({t.reference})</span> : null}{t.voided_at && <div className="text-xs">Voided: {t.void_reason}</div>}</td>
-                  <td className="py-3 pr-2 text-slate-600">{t.project ?? ""}</td>
-                  <td className={`whitespace-nowrap py-3 pr-5 text-right font-semibold tabular-nums ${t.voided_at ? "line-through" : t.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{t.kind === "income" ? "+" : "−"}{peso(t.amount)}</td>
-                  {isTreasurer && <td className="py-2 pr-5 text-right">{!t.voided_at && (
-                    <details className="group relative inline-block text-left">
-                      <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-red-50 hover:text-flag-red [&::-webkit-details-marker]:hidden">Void</summary>
-                      <form action={voidTransaction} className="absolute right-0 z-10 mt-1 flex w-72 gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"><input type="hidden" name="id" value={t.id} />
-                        <input name="reason" required placeholder="Why void this entry?" aria-label="Reason to void" className="input py-1.5 text-xs" /><SubmitButton className="btn-red btn-sm" pending="...">Void</SubmitButton></form>
-                    </details>)}</td>}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <h2 className="text-xl font-bold">Recent ledger</h2>
+          {(() => {
+            const n = ledger.filter((t) => t.kind === "expense" && !t.voided_at && t.receipts.length === 0).length;
+            return <p className={`text-xs font-medium ${n ? "text-yellow-700" : "text-emerald-700"}`}>{n ? `${n} expense${n === 1 ? "" : "s"} still need${n === 1 ? "s" : ""} a receipt photo` : "Every expense here has a receipt photo"}</p>;
+          })()}
         </div>
+        {ledger.length === 0 ? <Empty size="sm">No entries yet.</Empty> : (
+          <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {ledger.map((t) => {
+              const receipts = t.receipts as { id: number; public: boolean }[];
+              const missing = t.kind === "expense" && !t.voided_at && receipts.length === 0;
+              return (
+                <li key={t.id} className={`px-4 py-3.5 sm:px-5 ${t.voided_at ? "bg-slate-50/60 text-slate-400" : ""}`}>
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <span className="w-12 shrink-0 pt-0.5 text-xs font-semibold text-slate-500">{fmtDate(t.tx_date, "short")}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className={`font-semibold ${t.voided_at ? "line-through" : "text-ink"}`}>{t.description}</p>
+                      <p className="text-xs text-slate-500">{[t.project, t.reference ? (/^or[\s.#-]/i.test(t.reference) ? t.reference : `OR ${t.reference}`) : ""].filter(Boolean).join(" · ") || (t.kind === "income" ? "Income" : "Expense")}</p>
+                      {t.voided_at && <p className="mt-0.5 text-xs">Voided: {t.void_reason}</p>}
+                      {receipts.length > 0 && (
+                        <ul className="mt-2 flex flex-wrap gap-2">
+                          {receipts.map((r, i) => (
+                            <li key={r.id}>
+                              <a href={`/api/receipt/${r.id}`} target="_blank" rel="noreferrer" className="relative block h-12 w-10 overflow-hidden rounded-md bg-slate-100 ring-1 ring-slate-200 transition hover:ring-2 hover:ring-flag-blue" title={r.public ? "Receipt (public)" : "Receipt (officials only)"}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={`/api/receipt/${r.id}`} alt={`Receipt ${i + 1} for ${t.description}`} loading="lazy" className="h-full w-full object-cover" />
+                                {!r.public && <span className="absolute inset-x-0 bottom-0 bg-ink/80 text-center text-[8px] font-bold uppercase text-white">Hidden</span>}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {missing && <p className="mt-1 text-xs font-medium text-yellow-700">No receipt photo yet</p>}
+                    </div>
+                    <span className={`shrink-0 whitespace-nowrap font-semibold tabular-nums ${t.voided_at ? "line-through" : t.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{t.kind === "income" ? "+" : "−"}{peso(t.amount)}</span>
+                  </div>
+
+                  {isTreasurer && !t.voided_at && (
+                    <details className="group mt-2 sm:ml-16">
+                      <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-mist hover:text-flag-blue [&::-webkit-details-marker]:hidden">
+                        {missing ? "Add receipt or void" : "Manage entry"} <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+                      </summary>
+                      <div className="mt-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                        <div className="rounded-xl border border-slate-200 p-3">
+                          <form action={addReceipts}>
+                            <input type="hidden" name="id" value={t.id} />
+                            <ReceiptInput canRead={false} idPrefix={`tx${t.id}`} />
+                            <SubmitButton className="btn-primary btn-sm mt-3" pending="Uploading...">Save receipt</SubmitButton>
+                          </form>
+                          {receipts.length > 0 && (
+                            <div className="mt-3 border-t border-slate-100 pt-3">
+                              <p className="text-xs font-semibold text-slate-500">Uploaded the wrong photo?</p>
+                              <div className="mt-1.5 flex flex-wrap gap-2">
+                                {receipts.map((r, i) => (
+                                  <form key={r.id} action={removeReceipt}>
+                                    <input type="hidden" name="receipt_id" value={r.id} />
+                                    <SubmitButton className="btn btn-sm border border-slate-200 bg-white text-slate-600 hover:border-flag-red hover:text-flag-red" pending="...">Remove receipt {i + 1}</SubmitButton>
+                                  </form>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <form action={voidTransaction} className="rounded-xl border border-slate-200 p-3">
+                          <input type="hidden" name="id" value={t.id} />
+                          <label className="label" htmlFor={`void-${t.id}`}>Void this entry</label>
+                          <div className="flex gap-2">
+                            <input id={`void-${t.id}`} name="reason" required placeholder="Why? e.g. typed the wrong amount" className="input" />
+                            <SubmitButton className="btn-red btn-sm" pending="...">Void</SubmitButton>
+                          </div>
+                          <p className="hint">The entry stays on the record, struck through, with your reason.</p>
+                        </form>
+                      </div>
+                    </details>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
     </div>
   );

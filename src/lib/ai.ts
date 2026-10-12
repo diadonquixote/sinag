@@ -506,3 +506,50 @@ export async function transcribeImage(dataUrl: string): Promise<{ text?: string;
   if (!reply) return { error: "Could not read the photo. Try a clearer picture, or type the notes in." };
   return { text: reply };
 }
+
+// ----------------------------------------------------------------- receipts
+
+export type ReceiptReading = { amount?: number; date?: string; reference?: string; vendor?: string; description?: string };
+
+/**
+ * Reads a photo of a receipt so the treasurer does not have to retype it.
+ * Only fills suggestions: the treasurer checks every field before saving.
+ */
+export async function readReceipt(dataUrl: string): Promise<{ reading?: ReceiptReading; error?: string }> {
+  if (!/^data:image\/(jpeg|png|webp);base64,/.test(dataUrl)) return { error: "Use a JPG or PNG photo." };
+  if (dataUrl.length > 3_500_000) return { error: "The photo is too large." };
+  const model = process.env.NEBIUS_VISION_MODEL;
+  if (!process.env.NEBIUS_API_KEY || !model) return { error: "Receipt reading is not set up yet." };
+
+  const reply = await chat(
+    [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text:
+              "This is a photo of a receipt or official receipt (OR) from the Philippines. " +
+              'Reply with JSON only: {"total": number (the amount paid in pesos, no symbols), "date": "YYYY-MM-DD", ' +
+              '"reference": "the OR or invoice number", "vendor": "store name", "items": "a short list of what was bought"}. ' +
+              "Use null for anything you cannot read clearly. Do not guess.",
+          },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ],
+      },
+    ],
+    { model, json: true, maxTokens: 600 },
+  );
+  const raw = parseJson(reply);
+  if (!raw) return { error: "Could not read this receipt. Type the details in." };
+
+  const reading: ReceiptReading = {};
+  const total = Number(String(raw.total ?? "").replace(/[^\d.]/g, ""));
+  if (total > 0 && total < 100_000_000) reading.amount = Math.round(total * 100) / 100;
+  if (typeof raw.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.date)) reading.date = raw.date;
+  if (typeof raw.reference === "string" && raw.reference.trim()) reading.reference = raw.reference.trim().slice(0, 60);
+  if (typeof raw.vendor === "string" && raw.vendor.trim()) reading.vendor = raw.vendor.trim().slice(0, 80);
+  const items = Array.isArray(raw.items) ? raw.items.join(", ") : raw.items;
+  if (typeof items === "string" && items.trim()) reading.description = items.trim().slice(0, 160);
+  return { reading };
+}

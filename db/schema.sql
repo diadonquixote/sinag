@@ -155,6 +155,19 @@ create table if not exists transactions (
 create index if not exists transactions_date_idx on transactions (tx_date desc);
 create index if not exists transactions_project_idx on transactions (project_id);
 
+-- Photos of receipts for ledger entries. Shown on the public ledger unless the treasurer hides one
+-- (for example a receipt that shows someone's personal details).
+create table if not exists transaction_receipts (
+  id serial primary key,
+  transaction_id int not null references transactions(id) on delete cascade,
+  data bytea not null,
+  type text not null default 'image/jpeg',
+  is_public boolean not null default true,
+  created_by int references users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists transaction_receipts_tx_idx on transaction_receipts (transaction_id);
+
 create table if not exists reports (
   id serial primary key,
   title text not null,

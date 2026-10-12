@@ -8,6 +8,24 @@ import { fundSummary } from "@/lib/funds";
 import { narrateReport } from "@/lib/ai";
 import { fmtDate, peso, todayManila } from "@/lib/format";
 import type { ReportData, ReportLine } from "@/lib/types";
+import { decodeImage } from "@/lib/images";
+
+const MAX_RECEIPTS = 3;
+const MAX_RECEIPT_BYTES = 1_200_000; // photos are shrunk to about 1600 px in the browser first
+
+/** Receipt photos sent with a form. Returns null if any of them is not a usable image. */
+function receiptPhotos(fd: FormData) {
+  const raw = fd.getAll("receipts").map(String).filter(Boolean);
+  if (raw.length > MAX_RECEIPTS) return null;
+  const decoded = raw.map((d) => decodeImage(d, MAX_RECEIPT_BYTES));
+  return decoded.every(Boolean) ? (decoded as NonNullable<(typeof decoded)[number]>[]) : null;
+}
+
+async function saveReceipts(txId: number, photos: { bytes: Buffer; type: string }[], isPublic: boolean, userId: number) {
+  for (const p of photos) {
+    await sql`insert into transaction_receipts (transaction_id, data, type, is_public, created_by) values (${txId}, ${p.bytes}, ${p.type}, ${isPublic}, ${userId})`;
+  }
+}
 
 const DESK = "/dashboard/treasurer";
 
@@ -41,6 +59,8 @@ export async function addTransaction(fd: FormData): Promise<void> {
   if (!(amount > 0) || amount > 1_000_000_000) back(DESK, "err", "Enter an amount greater than zero.");
   if (description.length < 3) back(DESK, "err", "Describe what this entry is for.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) back(DESK, "err", "Pick the date of the transaction.");
+  const receipts = receiptPhotos(fd);
+  if (receipts === null) back(DESK, "err", `A receipt photo could not be used. Add up to ${MAX_RECEIPTS} JPG or PNG photos.`);
 
   if (projectId !== null) {
     const [project] = await sql<Row[]>`select status from projects where id = ${projectId}`;
@@ -55,8 +75,39 @@ export async function addTransaction(fd: FormData): Promise<void> {
     values (${projectId}, ${kind}, ${amount}, ${description.slice(0, 200)}, ${category}, ${date}::date, ${reference}, ${user.id})
     returning id
   `;
-  await audit(user.id, `recorded ${kind}`, "transaction", row.id as number, `${peso(amount)} ${description}`);
-  back(DESK, "ok", `${kind === "income" ? "Income" : "Expense"} recorded.`);
+  await saveReceipts(row.id as number, receipts, fd.get("receipts_public") === "1", user.id);
+  await audit(user.id, `recorded ${kind}`, "transaction", row.id as number, `${peso(amount)} ${description}${receipts.length ? " (with receipt)" : ""}`);
+  back(DESK, "ok", `${kind === "income" ? "Income" : "Expense"} recorded${receipts.length ? " with the receipt" : ""}.`);
+}
+
+/** Adds receipt photos to an entry that was recorded without one. */
+export async function addReceipts(fd: FormData): Promise<void> {
+  const user = await requireRole("treasurer");
+  const id = Number(fd.get("id"));
+  if (!Number.isInteger(id)) back(DESK, "err", "Entry not found.");
+  const receipts = receiptPhotos(fd);
+  if (receipts === null || receipts.length === 0) back(DESK, "err", `Choose up to ${MAX_RECEIPTS} receipt photos (JPG or PNG).`);
+
+  const [tx] = await sql<Row[]>`
+    select t.description, (select count(*)::int from transaction_receipts r where r.transaction_id = t.id) as n
+    from transactions t where t.id = ${id}`;
+  if (!tx) back(DESK, "err", "Entry not found.");
+  if (Number(tx.n) + receipts.length > MAX_RECEIPTS * 2) back(DESK, "err", "This entry already has the most receipt photos allowed.");
+
+  await saveReceipts(id, receipts, fd.get("receipts_public") === "1", user.id);
+  await audit(user.id, "added receipt", "transaction", id, tx.description as string);
+  back(DESK, "ok", "Receipt added to the entry.");
+}
+
+/** Removes a wrong receipt photo. Kept in the audit log so removals are visible. */
+export async function removeReceipt(fd: FormData): Promise<void> {
+  const user = await requireRole("treasurer");
+  const id = Number(fd.get("receipt_id"));
+  if (!Number.isInteger(id)) back(DESK, "err", "Receipt not found.");
+  const rows = await sql<Row[]>`delete from transaction_receipts where id = ${id} returning transaction_id`;
+  if (rows.length === 0) back(DESK, "err", "That receipt was already removed.");
+  await audit(user.id, "removed receipt", "transaction", rows[0].transaction_id as number);
+  back(DESK, "ok", "Receipt photo removed.");
 }
 
 /** Mistakes are voided, not deleted. The entry stays visible with its reason. */
@@ -88,7 +139,8 @@ export async function createReport(fd: FormData): Promise<void> {
 
   const rows = await sql<Row[]>`
     select t.tx_date::text as date, t.kind, t.description, t.category, t.reference,
-           t.amount::float8 as amount, p.title as project
+           t.amount::float8 as amount, p.title as project,
+           (select count(*)::int from transaction_receipts r where r.transaction_id = t.id) as receipts
     from transactions t
     left join projects p on p.id = t.project_id
     where t.voided_at is null and t.tx_date between ${from}::date and ${to}::date
@@ -102,6 +154,7 @@ export async function createReport(fd: FormData): Promise<void> {
     project: (r.project as string) ?? null,
     amount: Number(r.amount),
     reference: (r.reference as string) ?? null,
+    receipts: Number(r.receipts ?? 0),
   }));
 
   const income = lines.filter((l) => l.kind === "income").reduce((s, l) => s + l.amount, 0);
@@ -140,8 +193,8 @@ export async function createReport(fd: FormData): Promise<void> {
       flags.push(`${r.project} has spent ${peso(Number(r.spent_total))}, which is more than its budget of ${peso(Number(r.budget))}.`);
     }
   }
-  const noRef = lines.filter((l) => l.kind === "expense" && !l.reference).length;
-  if (noRef > 0) flags.push(`${noRef} expense ${noRef === 1 ? "entry has" : "entries have"} no receipt or reference number.`);
+  const noRef = lines.filter((l) => l.kind === "expense" && !l.reference && !l.receipts).length;
+  if (noRef > 0) flags.push(`${noRef} expense ${noRef === 1 ? "entry has" : "entries have"} no receipt photo or reference number.`);
 
   const data: ReportData = {
     period: { from, to },

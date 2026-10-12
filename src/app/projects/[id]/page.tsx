@@ -44,7 +44,9 @@ export default async function ProjectPage({
     sql<Row[]>`
       select v.user_id, u.name, u.role, u.phone, u.skills, u.purok, extract(epoch from u.avatar_updated_at)::bigint::text as avatar_v
       from project_volunteers v join users u on u.id = v.user_id where v.project_id = ${id} order by v.created_at`,
-    sql<Row[]>`select tx_date::text as tx_date, description, amount::float8 as amount, reference from transactions where project_id = ${id} and kind = 'expense' and voided_at is null order by tx_date desc, id desc`,
+    sql<Row[]>`select t.tx_date::text as tx_date, t.description, t.amount::float8 as amount, t.reference,
+                 coalesce((select array_agg(r.id order by r.id) from transaction_receipts r where r.transaction_id = t.id and r.is_public), '{}') as receipts
+               from transactions t where t.project_id = ${id} and t.kind = 'expense' and t.voided_at is null order by t.tx_date desc, t.id desc`,
     isChair ? sql<Row[]>`select id, name, role from users where role <> 'kabataan' order by name` : Promise.resolve([] as Row[]),
     isChair && p.status === "proposed" ? fundSummary() : Promise.resolve(null),
   ]);
@@ -139,7 +141,14 @@ export default async function ProjectPage({
                 <ul className="space-y-2 text-sm">
                   {spendLines.map((s, i) => (
                     <li key={i} className="flex justify-between gap-3">
-                      <span className="min-w-0 text-slate-600">{s.description}{s.reference ? <span className="block text-xs text-slate-400">{s.reference}</span> : null}</span>
+                      <span className="min-w-0 text-slate-600">{s.description}
+                        <span className="block text-xs text-slate-400">
+                          {s.reference ?? ""}
+                          {(s.receipts as number[]).map((rid, n) => (
+                            <a key={rid} href={`/api/receipt/${rid}`} target="_blank" rel="noreferrer" className="ml-1 font-semibold text-flag-blue hover:underline first:ml-0">{s.reference || n > 0 ? " · " : ""}Receipt{(s.receipts as number[]).length > 1 ? ` ${n + 1}` : ""}</a>
+                          ))}
+                        </span>
+                      </span>
                       <span className="shrink-0 font-semibold tabular-nums">{peso(s.amount)}</span>
                     </li>
                   ))}

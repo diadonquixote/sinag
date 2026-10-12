@@ -40,8 +40,8 @@ export default function ReportView({ content, data }: { content: string; data: R
       {data && data.lines.length > 0 && (
         <div className="card relative overflow-x-auto">
           <h2 className="text-lg font-bold">Every entry</h2>
-          <table className="mt-3 w-full min-w-[560px] text-sm">
-            <thead><tr className="border-b text-left text-xs uppercase text-slate-500"><th className="py-2">Date</th><th>Description</th><th>Project</th><th>Ref</th><th className="text-right">Amount</th></tr></thead>
+          <table className="mt-3 w-full min-w-[620px] text-sm">
+            <thead><tr className="border-b text-left text-xs uppercase text-slate-500"><th className="py-2">Date</th><th>Description</th><th>Project</th><th>OR no.</th><th>Receipt</th><th className="text-right">Amount</th></tr></thead>
             <tbody>
               {data.lines.map((l, i) => (
                 <tr key={i} className="border-b border-slate-100">
@@ -49,6 +49,7 @@ export default function ReportView({ content, data }: { content: string; data: R
                   <td className="pr-2">{l.description}</td>
                   <td className="pr-2 text-slate-500">{l.project ?? ""}</td>
                   <td className="pr-2 text-slate-500">{l.reference ?? ""}</td>
+                  <td className="pr-2 text-xs">{l.receipts ? <span className="font-semibold text-emerald-700">Photo ✓</span> : l.kind === "expense" && l.receipts === 0 ? <span className="text-slate-400">None</span> : null}</td>
                   <td className={`text-right font-semibold ${l.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{l.kind === "income" ? "+" : "−"}{peso(l.amount)}</td>
                 </tr>
               ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { shrinkImage } from "@/lib/client-image";
 
 const SAMPLE = `Regular session, nagsimula 2:05 PM sa barangay hall.
 Present: Maria Reyes (Chair), Jose Cruz (Sec), Ana Santos (Treas), Paolo Dela Cruz, Bea Bautista. Absent: wala.
@@ -57,7 +58,7 @@ export default function NotesInput({
     let total = photos.reduce((n, p) => n + p.url.length, 0);
     for (const file of files.slice(0, room)) {
       try {
-        const url = await shrink(file);
+        const url = await shrinkImage(file);
         if (total + url.length > MAX_TOTAL_CHARS) {
           setMessage("These photos are too big to send together. Try fewer photos.");
           break;
@@ -211,18 +212,4 @@ export default function NotesInput({
       </div>
     </div>
   );
-}
-
-/** Shrinks a photo in the browser (longest side 1600 px) so several fit under the upload limit. */
-async function shrink(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.78);
 }
