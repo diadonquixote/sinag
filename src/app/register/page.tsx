@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Flash } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
+import PasswordInput from "@/components/PasswordInput";
 import { register } from "@/actions/auth";
 import { getSession } from "@/lib/auth";
 
@@ -22,7 +23,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
           <div><label className="label" htmlFor="barangay">Barangay</label><input id="barangay" name="barangay" className="input" placeholder="Optional" /></div>
           <div>
             <label className="label" htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" className="input" />
+            <PasswordInput id="password" name="password" required minLength={8} autoComplete="new-password" />
             <p className="hint">At least 8 characters.</p>
           </div>
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="confirm" className="mt-1" required /> I am a youth member of this barangay (ages 15 to 30).</label>

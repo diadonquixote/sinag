@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Flash } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
+import PasswordInput from "@/components/PasswordInput";
 import { login } from "@/actions/auth";
 import { getSession } from "@/lib/auth";
 
@@ -18,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="mt-6"><Flash sp={sp} /></div>
         <form action={login} className="card space-y-4">
           <div><label className="label" htmlFor="email">Email</label><input id="email" name="email" type="email" required autoComplete="email" className="input" /></div>
-          <div><label className="label" htmlFor="password">Password</label><input id="password" name="password" type="password" required autoComplete="current-password" className="input" /></div>
+          <div><label className="label" htmlFor="password">Password</label><PasswordInput id="password" name="password" required autoComplete="current-password" /></div>
           <SubmitButton pending="Logging in...">Log in</SubmitButton>
         </form>
         <p className="mt-4 text-sm text-slate-600">New here? <Link href="/register" className="font-semibold text-flag-blue">Join as kabataan</Link>. SK officials: your Chairperson creates your account.</p>
