@@ -34,7 +34,7 @@
 @keyframes sun-turn { to { transform: rotate(360deg); } }
 @keyframes sun-stretch {
   0%, 100% { transform: scaleY(0.8); }
-  50% { transform: scaleY(1.2); }
+  50% { transform: scaleY(1.15); }
 }
 @keyframes sun-breathe {
   0%, 100% { transform: scale(0.94); opacity: 0.85; }
@@ -42,7 +42,8 @@
 }
 .sun-turn-fwd { animation: sun-turn 40s linear infinite; }
 .sun-turn-rev { animation: sun-turn 90s linear infinite reverse; }
-.sun-stretch { animation: sun-stretch 5s ease-in-out infinite; }
+/* Stretch from the ray's base, so the rays stay attached to the sun. */
+.sun-stretch { animation: sun-stretch 5s ease-in-out infinite; transform-origin: 0 -34px; }
 .sun-breathe { animation: sun-breathe 6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .sun-turn-fwd, .sun-turn-rev, .sun-stretch, .sun-breathe { animation: none; }
