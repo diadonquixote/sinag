@@ -19,9 +19,10 @@ export default async function Header() {
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-blue to-flag-red" />
       <div className="container-x flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Logo />
-          <span className="hidden border-l border-slate-300 pl-3 sm:block"><PdynLogo /></span>
+          <span className="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true" />
+          <PdynLogo className="hidden sm:inline-flex" />
         </div>
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
           {LINKS.map((l) => (

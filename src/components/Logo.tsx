@@ -42,14 +42,17 @@ export function SinagMark({ className = "h-9 w-9", spin = true }: { className?: 
         {fine.map((i) => (
           <polygon key={`f${i}`} points="-4,-34 4,-34 0,-80" fill="url(#sinag-ray-fine)" transform={`rotate(${i * 45 + 22.5})`} />
         ))}
-        {long.map((i) => (
-          <polygon
-            key={`l${i}`}
-            points="-11,-34 11,-34 0,-98"
-            fill={i % 2 === 0 ? "url(#sinag-ray-blue)" : "url(#sinag-ray-red)"}
-            transform={`rotate(${i * 45})`}
-          />
-        ))}
+        {long.map((i) => {
+          const fill = i % 2 === 0 ? "url(#sinag-ray-blue)" : "url(#sinag-ray-red)";
+          return (
+            <g key={`l${i}`} transform={`rotate(${i * 45})`}>
+              {/* two halves, one lit and one shaded, so each ray reads as a bevelled blade */}
+              <polygon points="-11,-34 0,-34 0,-98" fill={fill} />
+              <polygon points="0,-34 11,-34 0,-98" fill={fill} />
+              <polygon points="0,-34 11,-34 0,-98" fill="#8A4B00" opacity="0.14" />
+            </g>
+          );
+        })}
       </g>
 
       <circle r="30" fill="url(#sinag-core)" />

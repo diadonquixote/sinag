@@ -12,35 +12,41 @@ export default async function Home() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-slate-200">
-        <SunRays className="pointer-events-none absolute -right-24 -top-24 h-[34rem] w-[34rem] opacity-60 sm:-right-10 sm:-top-32 sm:h-[44rem] sm:w-[44rem]" />
-        <div className="container-x relative py-16 sm:py-24">
-          <p className="eyebrow">Para sa kabataan, kasama ang kabataan</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-6xl">
-            Let in the <span className="text-flag-blue">light</span> on every SK peso and project.
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg text-slate-700">
-            Suggest ideas, vote on what happens next, see the schedule, and read the minutes and financial reports. All in one place, open to every kabataan.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/feed" className="btn-primary">See the bulletin</Link>
-            {user ? (
-              <Link href="/ideas/new" className="btn-yellow">Suggest a project</Link>
-            ) : (
-              <Link href="/register" className="btn-red">Join as kabataan</Link>
-            )}
-            <Link href="/calendar" className="btn-outline">View the calendar</Link>
+      <section className="relative overflow-hidden border-b border-slate-200 bg-[radial-gradient(60rem_40rem_at_85%_35%,#FFF7D6_0%,#FFFFFF_60%)]">
+        <div className="container-x relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:gap-6">
+          <div className="order-2 lg:order-1">
+            <p className="eyebrow">Para sa kabataan, kasama ang kabataan</p>
+            <h1 className="mt-3 text-4xl font-bold leading-[1.08] sm:text-6xl">
+              Let in the <span className="text-flag-blue">light</span> on every SK peso and project.
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-700">
+              Suggest ideas, vote on what happens next, see the schedule, and read the minutes and financial reports. All in one place, open to every kabataan.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/feed" className="btn-primary">See the bulletin</Link>
+              {user ? (
+                <Link href="/ideas/new" className="btn-yellow">Suggest a project</Link>
+              ) : (
+                <Link href="/register" className="btn-red">Join as kabataan</Link>
+              )}
+              <Link href="/calendar" className="btn-outline">View the calendar</Link>
+            </div>
           </div>
-          <dl className="mt-12 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+
+          <div className="order-1 flex justify-center lg:order-2" aria-hidden="true">
+            <SunRays className="pointer-events-none aspect-square w-60 sm:w-80 lg:w-full lg:max-w-[28rem]" />
+          </div>
+
+          <dl className="order-3 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:col-span-2">
             {[
               ["Ideas from youth", stats.ideas],
               ["Votes cast", stats.votes],
               ["Funded projects", stats.projects],
               ["Completed", stats.completed],
             ].map(([label, value]) => (
-              <div key={label as string} className="rounded-2xl border border-slate-200 bg-white/90 p-4">
-                <dd className="text-3xl font-bold text-flag-blue">{value as number}</dd>
-                <dt className="text-xs font-medium text-slate-600">{label}</dt>
+              <div key={label as string} className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
+                <dt className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt>
+                <dd className="font-display text-4xl font-bold leading-none text-flag-blue">{value as number}</dd>
               </div>
             ))}
           </dl>
