@@ -16,15 +16,16 @@ export default async function SecretaryDesk({ searchParams }: { searchParams: Pr
   const user = await requireRole("secretary", "chairperson");
   const sp = await searchParams;
   const rows = user.role === "chairperson"
-    ? await sql<Row[]>`select m.id, m.title, m.status, m.session_date::text as session_date, u.name as author from minutes m join users u on u.id = m.author_id order by m.session_date desc, m.id desc`
-    : await sql<Row[]>`select m.id, m.title, m.status, m.session_date::text as session_date, u.name as author from minutes m join users u on u.id = m.author_id where m.author_id = ${user.id} order by m.session_date desc, m.id desc`;
+    ? await sql<Row[]>`select m.id, m.title, m.status, m.session_date::text as session_date, u.name as author, (select count(*)::int from minutes_photos p where p.minutes_id = m.id) as photos from minutes m join users u on u.id = m.author_id order by m.session_date desc, m.id desc`
+    : await sql<Row[]>`select m.id, m.title, m.status, m.session_date::text as session_date, u.name as author, (select count(*)::int from minutes_photos p where p.minutes_id = m.id) as photos from minutes m join users u on u.id = m.author_id where m.author_id = ${user.id} order by m.session_date desc, m.id desc`;
   const canScan = aiConfigured() && !!process.env.NEBIUS_VISION_MODEL;
   return (
     <div className="space-y-10">
       <Flash sp={sp} />
       <section>
-        <PageHeader eyebrow="Secretary desk" title="Minutes assistant" size="md">Paste your raw notes. Sinag turns them into clear minutes with attendance, decisions, action items and draft resolutions. You check it, then the Chairperson approves it before it goes public.</PageHeader>
-        {!aiConfigured() && <Notice>AI is not connected, so drafts will be simple. Add NEBIUS_API_KEY to enable the full assistant.</Notice>}
+        <PageHeader eyebrow="Secretary desk" title="Minutes assistant" size="md">Upload photos of your handwritten notes or type them in. Sinag turns them into clear minutes with attendance, decisions, action items and draft resolutions. You check it, then the Chairperson approves it before it goes public.</PageHeader>
+        {!aiConfigured() ? <Notice>AI is not connected yet, so drafts will be simple and photos are not read automatically. Add NEBIUS_API_KEY (and NEBIUS_VISION_MODEL for photos) to turn on the full assistant.</Notice>
+          : !canScan && <Notice>Photos are saved but not read automatically. Add NEBIUS_VISION_MODEL to let Sinag read handwriting.</Notice>}
         <form action={createMinutes} className="card space-y-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div><label className="label" htmlFor="title">Meeting title</label><input id="title" name="title" required defaultValue="Regular Session" className="input" /></div>
@@ -40,7 +41,7 @@ export default async function SecretaryDesk({ searchParams }: { searchParams: Pr
           <ul className="space-y-2">
             {rows.map((m) => (
               <li key={m.id}><Link href={`/dashboard/minutes/${m.id}`} className="card flex flex-wrap items-center justify-between gap-2 py-3 card-link">
-                <span className="min-w-0"><b className="font-semibold">{m.title}</b><br /><span className="text-xs text-slate-500">{fmtDate(m.session_date)}{user.role === "chairperson" ? ` · ${m.author}` : ""}</span></span>
+                <span className="min-w-0"><b className="font-semibold">{m.title}</b><br /><span className="text-xs text-slate-500">{fmtDate(m.session_date)}{user.role === "chairperson" ? ` · ${m.author}` : ""}{m.photos > 0 ? ` · ${m.photos} photo${m.photos === 1 ? "" : "s"} of notes` : ""}</span></span>
                 <Badge className={DOC_STATUS[m.status].className}>{DOC_STATUS[m.status].label}</Badge>
               </Link></li>
             ))}

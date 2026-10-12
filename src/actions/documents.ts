@@ -10,6 +10,10 @@ import { fundSummary } from "@/lib/funds";
 import { todayManila } from "@/lib/format";
 import type { MinutesData } from "@/lib/types";
 import type { Role } from "@/lib/roles";
+import { decodeImage } from "@/lib/images";
+
+const MAX_NOTE_PHOTOS = 6;
+const MAX_NOTE_PHOTO_BYTES = 1_200_000; // photos are shrunk to about 1600 px in the browser first
 
 /**
  * Minutes and financial reports share one workflow:
@@ -51,7 +55,9 @@ export async function createMinutes(fd: FormData): Promise<void> {
 
   if (title.length < 4) back("/dashboard/secretary", "err", "Give the meeting a title, for example 'Regular Session'.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) back("/dashboard/secretary", "err", "Pick the date of the meeting.");
-  if (raw.length < 30) back("/dashboard/secretary", "err", "Paste or type the raw notes first (at least a few lines).");
+  if (raw.length < 30) back("/dashboard/secretary", "err", "Type the raw notes first (at least a few lines), or add photos and let Sinag read them.");
+  const photos = notePhotos(fd);
+  if (photos === null) back("/dashboard/secretary", "err", `One of the photos could not be used. Add up to ${MAX_NOTE_PHOTOS} JPG or PNG photos.`);
 
   const { data, usedAI } = await generateMinutes(raw, { title, date });
   data.budget_check = await budgetCheck(data);
@@ -62,7 +68,8 @@ export async function createMinutes(fd: FormData): Promise<void> {
     values (${title.slice(0, 160)}, ${date}::date, ${raw}, ${content}, ${sql.json(data as never)}, ${user.id})
     returning id
   `;
-  await audit(user.id, "drafted minutes", "minutes", row.id as number, title);
+  await savePhotos(row.id as number, photos, 0);
+  await audit(user.id, "drafted minutes", "minutes", row.id as number, photos.length ? `${title} (${photos.length} photo${photos.length === 1 ? "" : "s"})` : title);
   back(
     path("minutes", row.id as number),
     "ok",
@@ -84,6 +91,8 @@ export async function regenerateMinutes(fd: FormData): Promise<void> {
   if (doc.status === "published") back(path("minutes", id), "err", "Published minutes cannot be changed. Return them to draft first.");
   const raw = String(fd.get("raw_notes") ?? "").trim();
   if (raw.length < 30) back(path("minutes", id), "err", "The raw notes are too short.");
+  const photos = notePhotos(fd);
+  if (photos === null) back(path("minutes", id), "err", `One of the photos could not be used. Add up to ${MAX_NOTE_PHOTOS} JPG or PNG photos.`);
 
   const [meta] = await sql<Row[]>`select title, session_date::text as date from minutes where id = ${id}`;
   const { data, usedAI } = await generateMinutes(raw, { title: meta.title as string, date: meta.date as string });
@@ -93,8 +102,25 @@ export async function regenerateMinutes(fd: FormData): Promise<void> {
     update minutes set raw_notes = ${raw}, content = ${content}, data = ${sql.json(data as never)}, status = 'draft'
     where id = ${id}
   `;
+  const [{ pages }] = await sql<Row[]>`select coalesce(max(page), 0)::int as pages from minutes_photos where minutes_id = ${id}`;
+  if (Number(pages) + photos.length > MAX_NOTE_PHOTOS * 2) back(path("minutes", id), "err", "These minutes already have the most photos allowed.");
+  await savePhotos(id, photos, Number(pages));
   await audit(user.id, "regenerated minutes", "minutes", id);
   back(path("minutes", id), "ok", usedAI ? "Minutes regenerated from the updated notes." : "AI was not available, so a simple draft was built. Please review it.");
+}
+
+/** Photos of handwritten notes sent with the form. Returns null if any of them is not a usable image. */
+function notePhotos(fd: FormData) {
+  const raw = fd.getAll("photos").map(String).filter(Boolean);
+  if (raw.length > MAX_NOTE_PHOTOS) return null;
+  const decoded = raw.map((d) => decodeImage(d, MAX_NOTE_PHOTO_BYTES));
+  return decoded.every(Boolean) ? (decoded as NonNullable<(typeof decoded)[number]>[]) : null;
+}
+
+async function savePhotos(minutesId: number, photos: { bytes: Buffer; type: string }[], startPage: number) {
+  for (const [i, p] of photos.entries()) {
+    await sql`insert into minutes_photos (minutes_id, page, data, type) values (${minutesId}, ${startPage + i + 1}, ${p.bytes}, ${p.type})`;
+  }
 }
 
 // ---------------------------------------------------------------- shared workflow

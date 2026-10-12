@@ -122,6 +122,18 @@ create table if not exists minutes (
 );
 create index if not exists minutes_status_idx on minutes (status, published_at desc);
 
+-- Photos of the handwritten notes a set of minutes was written from. Kept as the original record.
+-- Only the author and the Chairperson can see them.
+create table if not exists minutes_photos (
+  id serial primary key,
+  minutes_id int not null references minutes(id) on delete cascade,
+  page int not null,
+  data bytea not null,
+  type text not null default 'image/jpeg',
+  created_at timestamptz not null default now()
+);
+create index if not exists minutes_photos_minutes_idx on minutes_photos (minutes_id, page);
+
 -- Treasurer's ledger. Entries are never deleted: a mistake is voided (kept, struck through, with a reason).
 create table if not exists transactions (
   id serial primary key,

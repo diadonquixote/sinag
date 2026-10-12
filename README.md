@@ -11,7 +11,7 @@ Built by PDYN Technologies, from a first-hand problem: SK work that happens out 
 | **Everyone (no login)** | Public bulletin, project pages with budget vs. actual spending, monthly calendar, polls and ideas, fund transparency page with the full ledger |
 | **Kabataan** | Suggest project ideas, vote in polls (a fixed number of votes each, can be undone), volunteer for events, track their ideas |
 | **SK Chairperson** | Review ideas, open and close polls, turn winners into AI-drafted proposals with itemized budgets, approve budgets (blocked if the fund can't cover them), schedule with overlap checks, **approve everything before it is published**, audit log, create official accounts |
-| **SK Secretary** | Paste raw Taglish notes (or a photo of handwritten notes) and get structured minutes: attendance, decisions, action items, draft resolutions, and a budget check |
+| **SK Secretary** | Type raw Taglish notes or upload up to 6 photos of handwritten pages (read automatically when a vision model is set, and kept with the minutes as the original record) and get structured minutes: attendance, decisions, action items, draft resolutions, and a budget check |
 | **SK Treasurer** | Ledger (entries are voided, never deleted), generate financial reports with code-computed numbers, AI-written plain-language summary and automatic warnings (overspending, missing receipts) |
 | **SK Kagawad** | Post progress updates on the projects they lead |
 | **Every account** | A profile with photo, bio, purok, skills and a private mobile number. Officials appear on the public **SK council** page; kabataan photos are only shown to themselves and SK officials. Point persons see volunteers' contact details. |
