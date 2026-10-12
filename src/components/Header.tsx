@@ -15,7 +15,6 @@ const LINKS = [
 
 export default async function Header() {
   const user = await getSession();
-  const org = process.env.NEXT_PUBLIC_ORG_NAME;
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-blue to-flag-red" />
@@ -23,7 +22,6 @@ export default async function Header() {
         <div className="flex items-center gap-3">
           <Logo />
           <span className="hidden border-l border-slate-300 pl-3 sm:block"><PdynLogo /></span>
-          {org && <span className="hidden border-l border-slate-300 pl-3 text-xs font-medium text-slate-500 lg:block">{org}</span>}
         </div>
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
           {LINKS.map((l) => (

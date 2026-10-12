@@ -18,6 +18,7 @@ const config: Config = {
       },
       keyframes: {
         "slow-spin": { to: { transform: "rotate(360deg)" } },
+        "sinag-turn": { to: { transform: "rotate(360deg)" } },
       },
       animation: {
         "slow-spin": "slow-spin 120s linear infinite",
