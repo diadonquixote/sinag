@@ -31,8 +31,10 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-slate-200">
-        <div className="container-x flex items-center py-4">
+        <div className="container-x flex flex-col items-center justify-between gap-4 py-5 text-sm text-slate-600 md:flex-row">
+          <p>&copy; {new Date().getFullYear()} Sinag. Everything in the open.</p>
           <PdynLogo />
+          <a href="mailto:pdyntechnology@gmail.com" className="hover:text-flag-blue">pdyntechnology@gmail.com</a>
         </div>
       </div>
       <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-yellow to-flag-red" />
