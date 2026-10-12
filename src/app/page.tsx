@@ -13,7 +13,7 @@ export default async function Home() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-slate-200">
-        <SunRays className="pointer-events-none absolute -right-24 -top-24 h-[34rem] w-[34rem] animate-slow-spin opacity-25 sm:-right-10 sm:-top-32 sm:h-[44rem] sm:w-[44rem]" />
+        <SunRays className="pointer-events-none absolute -right-24 -top-24 h-[34rem] w-[34rem] opacity-60 sm:-right-10 sm:-top-32 sm:h-[44rem] sm:w-[44rem]" />
         <div className="container-x relative py-16 sm:py-24">
           <p className="eyebrow">Para sa kabataan, kasama ang kabataan</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-6xl">

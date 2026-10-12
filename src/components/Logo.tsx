@@ -14,7 +14,8 @@ export function SinagMark({ className = "h-9 w-9", spin = true }: { className?: 
         <linearGradient id="sinag-ray-blue" gradientUnits="userSpaceOnUse" x1="0" y1="-34" x2="0" y2="-98">
           <stop offset="0" stopColor="#FCD116" />
           <stop offset="0.18" stopColor="#FCD116" />
-          <stop offset="0.6" stopColor="#3F63C8" />
+          <stop offset="0.42" stopColor="#A9BFF2" />
+          <stop offset="0.72" stopColor="#3F63C8" />
           <stop offset="1" stopColor="#0038A8" />
         </linearGradient>
         <linearGradient id="sinag-ray-red" gradientUnits="userSpaceOnUse" x1="0" y1="-34" x2="0" y2="-98">
