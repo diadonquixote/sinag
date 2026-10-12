@@ -13,8 +13,9 @@ export default async function Home() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-slate-200 bg-[radial-gradient(60rem_40rem_at_85%_35%,#FFF7D6_0%,#FFFFFF_60%)]">
-        <div className="container-x relative grid items-center gap-10 py-14 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:gap-6">
-          <div className="order-2 lg:order-1">
+        <SunRays className="pointer-events-none absolute -right-40 top-1/2 h-[34rem] w-[34rem] -translate-y-1/2 opacity-40 sm:-right-24 sm:h-[44rem] sm:w-[44rem] lg:-right-28 lg:opacity-100" />
+        <div className="container-x relative grid gap-10 py-14 sm:py-20">
+          <div className="max-w-xl lg:max-w-[36rem]">
             <p className="eyebrow">Para sa kabataan, kasama ang kabataan</p>
             <h1 className="mt-3 text-4xl font-bold leading-[1.08] sm:text-6xl">
               Let in the <span className="text-flag-blue">light</span> on every SK peso and project.
@@ -33,11 +34,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="order-1 flex justify-center lg:order-2" aria-hidden="true">
-            <SunRays className="pointer-events-none aspect-square w-60 sm:w-80 lg:w-full lg:max-w-[28rem]" />
-          </div>
-
-          <dl className="order-3 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:col-span-2">
+          <dl className="relative grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               ["Ideas from youth", stats.ideas],
               ["Votes cast", stats.votes],
