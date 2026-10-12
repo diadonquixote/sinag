@@ -19,6 +19,7 @@ export default function Footer() {
             <li><Link href="/projects" className="hover:text-flag-blue">Projects</Link></li>
             <li><Link href="/calendar" className="hover:text-flag-blue">Calendar</Link></li>
             <li><Link href="/funds" className="hover:text-flag-blue">Fund transparency</Link></li>
+            <li><Link href="/council" className="hover:text-flag-blue">SK council</Link></li>
           </ul>
         </div>
         <div className="text-sm">

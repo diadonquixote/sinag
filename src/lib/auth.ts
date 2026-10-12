@@ -7,7 +7,7 @@ import type { Role } from "./roles";
 const COOKIE = "sinag_session";
 const WEEK = 60 * 60 * 24 * 7;
 
-export type SessionUser = { id: number; name: string; role: Role };
+export type SessionUser = { id: number; name: string; role: Role; /** set when the user has a profile photo; changes when the photo changes */ avatarV?: string | null };
 
 function secret(): Uint8Array {
   const value = process.env.AUTH_SECRET;
@@ -63,20 +63,20 @@ export async function requireRole(...roles: Role[]): Promise<SessionUser> {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const rows = await sql<Row[]>`select id, name, role from users where id = ${session.id}`;
+  const rows = await sql<Row[]>`select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users where id = ${session.id}`;
   const user = rows[0];
   if (!user) redirect("/login");
 
   if (roles.length > 0 && !roles.includes(user.role as Role)) redirect("/dashboard");
-  return { id: user.id as number, name: user.name as string, role: user.role as Role };
+  return { id: user.id as number, name: user.name as string, role: user.role as Role, avatarV: (user.avatar_v as string | null) ?? null };
 }
 
 /** Like requireRole but returns null instead of redirecting. For pages that adapt to who is looking. */
 export async function currentUser(): Promise<SessionUser | null> {
   const session = await getSession();
   if (!session) return null;
-  const rows = await sql<Row[]>`select id, name, role from users where id = ${session.id}`;
+  const rows = await sql<Row[]>`select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users where id = ${session.id}`;
   const user = rows[0];
   if (!user) return null;
-  return { id: user.id as number, name: user.name as string, role: user.role as Role };
+  return { id: user.id as number, name: user.name as string, role: user.role as Role, avatarV: (user.avatar_v as string | null) ?? null };
 }

@@ -23,6 +23,16 @@ insert into users (id, name, email, password_hash, role, barangay) values
   (7, 'Marco Villanueva', 'youth2@sinag.demo',    crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kabataan',    'Demo Barangay'),
   (8, 'Joy Ramos',        'youth3@sinag.demo',    crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kabataan',    'Demo Barangay');
 
+-- Profile details for the demo people
+update users set committee = 'Presiding officer', purok = 'Purok 3', bio = 'SK Chairperson. Studying public administration and coaching the barangay volleyball team on weekends.' where id = 1;
+update users set committee = 'Secretariat', purok = 'Purok 1', bio = 'Keeps the minutes and the records. Ask me for copies of any resolution.' where id = 2;
+update users set committee = 'Committee on Appropriations', purok = 'Purok 2', bio = 'Treasurer. Every peso in and out goes in the ledger, with a receipt.' where id = 3;
+update users set committee = 'Committee on Livelihood', purok = 'Purok 4', bio = 'Point person for the livelihood training. Small business owner.' where id = 4;
+update users set committee = 'Committee on Environment', purok = 'Purok 5', bio = 'Runs the clean-up drives. Bring gloves!' where id = 5;
+update users set purok = 'Purok 2', skills = 'First aid, event photos', bio = 'College student, first aid trained.' where id = 6;
+update users set purok = 'Purok 5', skills = 'Carpentry, driving' where id = 7;
+update users set purok = 'Purok 1', skills = 'Painting, social media' where id = 8;
+
 insert into settings (key, value) values ('total_fund', '500000');
 
 -- ---------------------------------------------------------------- ideas

@@ -1,6 +1,8 @@
 import { requireRole } from "@/lib/auth";
-import { ROLE_LABEL, type Role } from "@/lib/roles";
-import { initials } from "@/lib/format";
+import { sql, type Row } from "@/lib/db";
+import { isOfficial, ROLE_LABEL, type Role } from "@/lib/roles";
+import Avatar from "@/components/Avatar";
+import ProfileNudge from "@/components/ProfileNudge";
 import { DeskTabs, type NavItem } from "@/components/NavLinks";
 
 const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
@@ -18,20 +20,24 @@ const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireRole();
-  const tabs = [...NAV[user.role], { href: "/dashboard/account", label: "Account" }];
+  const [me] = await sql<Row[]>`select committee, bio, purok from users where id = ${user.id}`;
+  const tabs = [...NAV[user.role], { href: "/dashboard/profile", label: "Profile" }];
   // Minutes and report pages belong to the Minutes / Finance tabs.
   const withDocs = tabs.map((t) =>
     t.href === "/dashboard/secretary" ? { ...t, also: "/dashboard/minutes" } : t.href === "/dashboard/treasurer" ? { ...t, also: "/dashboard/reports" } : t,
   );
+  const missing = [!user.avatarV && "a photo", !me?.bio && "a short bio", !me?.purok && "your purok"].filter(Boolean) as string[];
   return (
     <>
       <div className="border-b border-slate-200 bg-gradient-to-b from-mist to-white">
         <div className="container-x pt-6">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-flag-blue font-bold text-white ring-4 ring-white">{initials(user.name)}</span>
+            <Avatar id={user.id} name={user.name} v={user.avatarV} size="lg" className="ring-4 ring-white" />
             <div className="min-w-0">
               <p className="truncate font-semibold text-ink">{user.name}</p>
-              <p className="text-xs font-medium text-slate-500">{ROLE_LABEL[user.role]}</p>
+              <p className="truncate text-xs font-medium text-slate-500">
+                {ROLE_LABEL[user.role]}{isOfficial(user.role) && me?.committee ? ` · ${me.committee}` : ""}
+              </p>
             </div>
           </div>
           <div className="mt-5">
@@ -39,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
       </div>
+      {missing.length > 0 && <ProfileNudge missing={missing} />}
       <div className="container-x py-8 sm:py-10">{children}</div>
     </>
   );

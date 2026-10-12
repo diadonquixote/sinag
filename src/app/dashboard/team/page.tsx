@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { Flash, PageHeader } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
-import { initials } from "@/lib/format";
+import Avatar from "@/components/Avatar";
 import { createOfficial } from "@/actions/auth";
 
 export const metadata = { title: "Team" };
@@ -11,18 +12,22 @@ export const metadata = { title: "Team" };
 export default async function Team({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireRole("chairperson");
   const sp = await searchParams;
-  const team = await sql<Row[]>`select id, name, email, role from users where role <> 'kabataan' order by role, name`;
+  const team = await sql<Row[]>`
+    select id, name, email, role, committee, phone, extract(epoch from avatar_updated_at)::bigint::text as avatar_v
+    from users where role <> 'kabataan'
+    order by case role when 'chairperson' then 0 when 'secretary' then 1 when 'treasurer' then 2 else 3 end, name`;
   return (
     <div className="space-y-8">
       <Flash sp={sp} />
-      <PageHeader eyebrow="Chairperson desk" title="SK team" size="md">Everyone who can log in to an official desk. Add new officials below and share their temporary password privately.</PageHeader>
+      <PageHeader eyebrow="Chairperson desk" title="SK team" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>Everyone who can log in to an official desk. Add new officials below and share their temporary password privately.</PageHeader>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {team.map((u) => (
           <li key={u.id} className="card flex items-center gap-3 py-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mist text-sm font-bold text-flag-blue ring-1 ring-inset ring-slate-200">{initials(u.name as string)}</span>
+            <Avatar id={u.id} name={u.name} v={u.avatar_v} size="md" tone="light" />
             <span className="min-w-0">
               <span className="block truncate font-semibold text-ink">{u.name}</span>
-              <span className="block truncate text-xs text-slate-500">{ROLE_LABEL[u.role as Role]} · {u.email}</span>
+              <span className="block truncate text-xs text-slate-500">{ROLE_LABEL[u.role as Role]}{u.committee ? ` · ${u.committee}` : ""}</span>
+              <span className="block truncate text-xs text-slate-400">{u.email}{u.phone ? ` · ${u.phone}` : ""}</span>
             </span>
           </li>
         ))}

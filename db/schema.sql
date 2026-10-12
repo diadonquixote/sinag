@@ -13,6 +13,16 @@ create table if not exists users (
 );
 create unique index if not exists users_email_lower_idx on users (lower(email));
 
+-- Profile details. Added after launch, so they are ALTERs that are safe to re-run.
+alter table users add column if not exists bio text;                 -- short "about me", shown on profile
+alter table users add column if not exists purok text;               -- purok or sitio
+alter table users add column if not exists phone text;               -- private: only SK officials can see it
+alter table users add column if not exists skills text;              -- what they can help with, comma separated
+alter table users add column if not exists committee text;           -- officials only, e.g. "Committee on Education"
+alter table users add column if not exists avatar bytea;             -- small square JPEG, resized in the browser
+alter table users add column if not exists avatar_type text;
+alter table users add column if not exists avatar_updated_at timestamptz;
+
 create table if not exists settings (
   key text primary key,
   value text not null

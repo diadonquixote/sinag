@@ -88,13 +88,13 @@ export async function changePassword(fd: FormData): Promise<void> {
   const user = await requireRole();
   const current = String(fd.get("current") ?? "");
   const next = String(fd.get("next") ?? "");
-  if (next.length < 8) back("/dashboard/account", "err", "Use a new password with at least 8 characters.");
+  if (next.length < 8) back("/dashboard/profile", "err", "Use a new password with at least 8 characters.");
 
   const [row] = await sql<Row[]>`select password_hash from users where id = ${user.id}`;
   if (!row || !(await bcrypt.compare(current, row.password_hash as string))) {
-    back("/dashboard/account", "err", "Your current password is not correct.");
+    back("/dashboard/profile", "err", "Your current password is not correct.");
   }
   const hash = await bcrypt.hash(next, 10);
   await sql`update users set password_hash = ${hash} where id = ${user.id}`;
-  back("/dashboard/account", "ok", "Password changed.");
+  back("/dashboard/profile", "ok", "Password changed.");
 }

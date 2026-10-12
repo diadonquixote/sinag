@@ -104,3 +104,14 @@ export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
 }
+
+/** Accepts 09171234567, 0917 123 4567, +63 917 123 4567 or 639171234567. Returns "+63 917 123 4567", or "" if invalid. */
+export function normalizePhone(input: string): string {
+  const digits = input.replace(/[^\d+]/g, "").replace(/^\+/, "");
+  let local = "";
+  if (/^09\d{9}$/.test(digits)) local = digits.slice(1);
+  else if (/^639\d{9}$/.test(digits)) local = digits.slice(2);
+  else if (/^9\d{9}$/.test(digits)) local = digits;
+  else return "";
+  return `+63 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
+}

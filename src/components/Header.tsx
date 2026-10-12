@@ -3,10 +3,10 @@ import Logo from "./Logo";
 import PdynLogo from "./PdynLogo";
 import MobileMenu from "./MobileMenu";
 import { NavLinks, type NavItem } from "./NavLinks";
-import { getSession } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { ROLE_HOME, ROLE_LABEL } from "@/lib/roles";
 import { logout } from "@/actions/auth";
-import { initials } from "@/lib/format";
+import Avatar from "./Avatar";
 
 const LINKS: NavItem[] = [
   { href: "/feed", label: "Bulletin" },
@@ -14,10 +14,12 @@ const LINKS: NavItem[] = [
   { href: "/calendar", label: "Calendar" },
   { href: "/ideas", label: "Ideas & Polls" },
   { href: "/funds", label: "Funds" },
+  { href: "/council", label: "Council" },
 ];
 
 export default async function Header() {
-  const user = await getSession();
+  // Read from the database (not just the login cookie) so a new name or photo shows right away.
+  const user = await currentUser();
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
       <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-yellow to-flag-red" />
@@ -37,7 +39,7 @@ export default async function Header() {
           {user ? (
             <>
               <Link href={ROLE_HOME[user.role]} className="group flex items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3.5 text-sm font-semibold text-ink transition hover:border-flag-blue hover:text-flag-blue">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-flag-blue text-[11px] font-bold text-white">{initials(user.name)}</span>
+                <Avatar id={user.id} name={user.name} v={user.avatarV} size="sm" />
                 My desk
               </Link>
               <form action={logout}>
@@ -62,7 +64,7 @@ export default async function Header() {
               {user ? (
                 <div className="flex flex-col gap-2">
                   <Link href={ROLE_HOME[user.role]} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-mist">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-flag-blue text-xs font-bold text-white">{initials(user.name)}</span>
+                    <Avatar id={user.id} name={user.name} v={user.avatarV} size="md" />
                     <span>
                       <span className="block text-sm font-semibold text-ink">{user.name}</span>
                       <span className="block text-xs text-slate-500">{ROLE_LABEL[user.role]} · open my desk</span>

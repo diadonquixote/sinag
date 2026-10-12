@@ -138,7 +138,10 @@ export default async function Home() {
               </div>
             ))}
           </div>
-          {!user && <Link href="/login" className="btn-yellow mt-8 px-5 py-3">SK officials: log in</Link>}
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/council" className="btn bg-white px-5 py-3 text-flag-blue hover:bg-blue-50">Meet the council</Link>
+            {!user && <Link href="/login" className="btn-yellow px-5 py-3">SK officials: log in</Link>}
+          </div>
         </div>
       </section>
     </>
