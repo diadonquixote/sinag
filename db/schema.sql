@@ -22,6 +22,9 @@ alter table users add column if not exists committee text;           -- official
 alter table users add column if not exists avatar bytea;             -- small square JPEG, resized in the browser
 alter table users add column if not exists avatar_type text;
 alter table users add column if not exists avatar_updated_at timestamptz;
+alter table users add column if not exists term text;                -- officials: e.g. "2023 to 2026"
+alter table users add column if not exists credentials text;         -- officials: education, trainings, awards (one per line)
+alter table users add column if not exists contributions text;       -- officials: what they did for the council (one per line)
 
 create table if not exists settings (
   key text primary key,

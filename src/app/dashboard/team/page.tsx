@@ -25,7 +25,7 @@ export default async function Team({ searchParams }: { searchParams: Promise<Rec
           <li key={u.id} className="card flex items-center gap-3 py-4">
             <Avatar id={u.id} name={u.name} v={u.avatar_v} size="md" tone="light" />
             <span className="min-w-0">
-              <span className="block truncate font-semibold text-ink">{u.name}</span>
+              <Link href={`/council/${u.id}`} className="block truncate font-semibold text-ink hover:text-flag-blue">{u.name}</Link>
               <span className="block truncate text-xs text-slate-500">{ROLE_LABEL[u.role as Role]}{u.committee ? ` · ${u.committee}` : ""}</span>
               <span className="block truncate text-xs text-slate-400">{u.email}{u.phone ? ` · ${u.phone}` : ""}</span>
             </span>

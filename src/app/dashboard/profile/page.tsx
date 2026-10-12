@@ -16,7 +16,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const user = await requireRole();
   const sp = await searchParams;
   const [me] = await sql<Row[]>`
-    select name, email, role, barangay, purok, bio, phone, skills, committee, created_at,
+    select name, email, role, barangay, purok, bio, phone, skills, committee, term, credentials, contributions, created_at,
            extract(epoch from avatar_updated_at)::bigint::text as avatar_v
     from users where id = ${user.id}`;
   const official = isOfficial(user.role);
@@ -32,10 +32,10 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         eyebrow="Profile"
         title="Your profile"
         size="md"
-        action={official ? <Link href="/council" className="btn-outline">See your public profile</Link> : undefined}
+        action={official ? <Link href={`/council/${user.id}`} className="btn-outline">See your public profile</Link> : undefined}
       >
         {official
-          ? "This is what kabataan see on the SK council page. Keep it up to date so people know who to talk to."
+          ? "This is what kabataan see on the SK council chart and your public profile. Keep it up to date so people know who to talk to."
           : "Help the SK get to know you. Your profile helps the council reach you when you volunteer."}
       </PageHeader>
 
@@ -84,6 +84,29 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               </div>
               </div>
             </fieldset>
+
+            {official && (
+              <fieldset className="border-t border-slate-100 pt-6">
+                <legend className="float-left mb-1 w-full font-display text-lg font-bold">Public profile</legend>
+                <p className="clear-both mb-5 text-sm text-slate-600">Shown when people click your name on the council organization chart.</p>
+                <div className="space-y-5">
+                  <div>
+                    <label className="label" htmlFor="term">Term of office</label>
+                    <input id="term" name="term" maxLength={40} defaultValue={me.term ?? ""} placeholder="e.g. 2023 to 2026" className="input sm:max-w-xs" />
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="credentials">Credentials</label>
+                    <textarea id="credentials" name="credentials" rows={4} defaultValue={me.credentials ?? ""} placeholder={"BS Public Administration, PUP\nSK Mandatory Training, DILG (2023)\nYouth Leadership Awardee (2024)"} className="input" />
+                    <p className="hint">Education, trainings, certificates, awards. One per line.</p>
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="contributions">Contributions to the council</label>
+                    <textarea id="contributions" name="contributions" rows={4} defaultValue={me.contributions ?? ""} placeholder={"Started monthly open forums for kabataan\nSecured a donation for school repairs"} className="input" />
+                    <p className="hint">What you have done for the SK and the barangay. One per line. Projects you lead and documents you publish in Sinag are added automatically.</p>
+                  </div>
+                </div>
+              </fieldset>
+            )}
 
             <fieldset className="border-t border-slate-100 pt-6">
               <legend className="float-left mb-5 w-full font-display text-lg font-bold">Where you live</legend>
@@ -176,7 +199,7 @@ function WhoSees({ official }: { official: boolean }) {
       <h2 className="text-base font-bold">Who can see what</h2>
       <dl className="mt-3 space-y-3 text-sm">
         <Visibility label="Name" who="Everyone" />
-        <Visibility label={official ? "Photo, bio, committee" : "Photo and bio"} who={official ? "Everyone" : "You and SK officials"} />
+        <Visibility label={official ? "Photo, bio, committee, credentials, contributions" : "Photo and bio"} who={official ? "Everyone" : "You and SK officials"} />
         <Visibility label="Skills and purok" who="You and SK officials" />
         <Visibility label="Mobile number" who="You and SK officials" />
         <Visibility label="Email" who="You and the Chairperson" />

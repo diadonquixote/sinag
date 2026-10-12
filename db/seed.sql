@@ -32,6 +32,27 @@ update users set committee = 'Committee on Environment', purok = 'Purok 5', bio 
 update users set purok = 'Purok 2', skills = 'First aid, event photos', bio = 'College student, first aid trained.' where id = 6;
 update users set purok = 'Purok 5', skills = 'Carpentry, driving' where id = 7;
 update users set purok = 'Purok 1', skills = 'Painting, social media' where id = 8;
+update users set term = '2023 to 2026' where id between 1 and 5;
+update users set
+  credentials = E'BS Public Administration, 3rd year, PUP\nSK Mandatory Training, DILG (2023)\nBarangay Youth Leadership Awardee (2024)',
+  contributions = E'Started monthly open forums for kabataan\nSecured a local cooperative donation for school repairs\nPushed every SK document onto Sinag so anyone can read it'
+  where id = 1;
+update users set
+  credentials = E'BS Office Administration graduate\nRecords management seminar, municipal government (2024)',
+  contributions = E'Recorded and published every session\'s minutes within a week\nDigitized past resolutions from 2023'
+  where id = 2;
+update users set
+  credentials = E'BS Accountancy, 4th year\nSK Financial Management Training, DBM (2023)',
+  contributions = E'Keeps a receipt for every peso spent\nPublishes a monthly plain-language financial report'
+  where id = 3;
+update users set
+  credentials = E'Small business owner (food stall)\nTESDA Food Processing NC II',
+  contributions = E'Organized the youth livelihood training with TESDA trainers'
+  where id = 4;
+update users set
+  credentials = E'BS Environmental Science student\nCommunity first responder training (2024)',
+  contributions = E'Led the Ilog clean-up drives\nRepaired 30 school chairs during Brigada Eskwela'
+  where id = 5;
 
 insert into settings (key, value) values ('total_fund', '500000');
 

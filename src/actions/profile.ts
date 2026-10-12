@@ -23,6 +23,14 @@ export async function updateProfile(fd: FormData): Promise<void> {
   const skills = text(fd, "skills", 200);
   const committee = isOfficial(user.role) ? text(fd, "committee", 80) : "";
   const phoneRaw = text(fd, "phone", 30);
+  // Officials' public profile: one item per line, blank lines dropped.
+  const lines = (key: string, maxLines: number) =>
+    isOfficial(user.role)
+      ? String(fd.get(key) ?? "").split(/\r?\n/).map((l) => l.trim().replace(/^[-•*]\s*/, "").slice(0, 160)).filter(Boolean).slice(0, maxLines).join("\n")
+      : "";
+  const credentials = lines("credentials", 12);
+  const contributions = lines("contributions", 15);
+  const term = isOfficial(user.role) ? text(fd, "term", 40) : "";
 
   if (name.length < 2) back(PAGE, "err", "Please enter your full name.");
   const phone = phoneRaw ? normalizePhone(phoneRaw) : "";
@@ -32,7 +40,8 @@ export async function updateProfile(fd: FormData): Promise<void> {
     update users set
       name = ${name}, bio = ${bio || null}, barangay = ${barangay || null}, purok = ${purok || null},
       skills = ${skills || null}, phone = ${phone || null},
-      committee = ${isOfficial(user.role) ? committee || null : null}
+      committee = ${isOfficial(user.role) ? committee || null : null},
+      term = ${term || null}, credentials = ${credentials || null}, contributions = ${contributions || null}
     where id = ${user.id}
   `;
 

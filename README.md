@@ -14,7 +14,7 @@ Built by PDYN Technologies, from a first-hand problem: SK work that happens out 
 | **SK Secretary** | Type raw Taglish notes or upload up to 6 photos of handwritten pages (read automatically when a vision model is set, and kept with the minutes as the original record) and get structured minutes: attendance, decisions, action items, draft resolutions, and a budget check |
 | **SK Treasurer** | Ledger (entries are voided, never deleted), generate financial reports with code-computed numbers, AI-written plain-language summary and automatic warnings (overspending, missing receipts) |
 | **SK Kagawad** | Post progress updates on the projects they lead |
-| **Every account** | A profile with photo, bio, purok, skills and a private mobile number. Officials appear on the public **SK council** page; kabataan photos are only shown to themselves and SK officials. Point persons see volunteers' contact details. |
+| **Every account** | A profile with photo, bio, purok, skills and a private mobile number. Officials appear on the public **SK council organization chart**; clicking anyone opens their profile with credentials, the contributions they list, and an automatic record of what they have done in Sinag. Kabataan photos are only shown to themselves and SK officials. Point persons see volunteers' contact details. |
 
 **Trust rules built in:** AI only drafts. Numbers are always computed in code. Minutes and reports go draft, then submitted, then published by the Chairperson. Every important action is written to an audit log.
 

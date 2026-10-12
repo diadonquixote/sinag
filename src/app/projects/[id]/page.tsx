@@ -66,7 +66,7 @@ export default async function ProjectPage({
       </div>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{p.title}</h1>
       <p className="mt-2 text-slate-600">{fmtDateRange(p.start_date, p.end_date)}{p.location ? ` · ${p.location}` : ""}</p>
-      {p.lead_name && <p className="mt-1 text-sm text-slate-500">Point person: <Link href={`/council#official-${p.lead_id}`} className="font-semibold text-flag-blue hover:underline">{p.lead_name}</Link></p>}
+      {p.lead_name && <p className="mt-1 text-sm text-slate-500">Point person: <Link href={`/council/${p.lead_id}`} className="font-semibold text-flag-blue hover:underline">{p.lead_name}</Link></p>}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
