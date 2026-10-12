@@ -29,6 +29,15 @@ export default function Footer() {
           </ul>
         </div>
       </div>
+      <div className="border-t border-slate-200">
+        <div className="container-x flex items-center gap-3 py-4 text-xs text-slate-500">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/pdyn-logo.png" alt="PDYN Technologies" width={36} height={36} className="h-9 w-9 rounded-lg" />
+          <p>
+            Built by <span className="font-bold text-ink">PDYN Technologies</span> for the Nebius x NVIDIA Global AI Hackathon.
+          </p>
+        </div>
+      </div>
       <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-yellow to-flag-red" />
     </footer>
   );
