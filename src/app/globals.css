@@ -29,3 +29,21 @@
   .prose-doc p { @apply my-2 leading-relaxed; }
   .prose-doc ul { @apply my-2 list-disc space-y-1 pl-5; }
 }
+
+/* ---- The hero sun (components/SunRays.tsx) ---- */
+@keyframes sun-turn { to { transform: rotate(360deg); } }
+@keyframes sun-stretch {
+  0%, 100% { transform: scaleY(0.8); }
+  50% { transform: scaleY(1.2); }
+}
+@keyframes sun-breathe {
+  0%, 100% { transform: scale(0.94); opacity: 0.85; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+.sun-turn-fwd { animation: sun-turn 40s linear infinite; }
+.sun-turn-rev { animation: sun-turn 90s linear infinite reverse; }
+.sun-stretch { animation: sun-stretch 5s ease-in-out infinite; }
+.sun-breathe { animation: sun-breathe 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sun-turn-fwd, .sun-turn-rev, .sun-stretch, .sun-breathe { animation: none; }
+}
