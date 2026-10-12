@@ -8,14 +8,14 @@ export default function ProjectCard({ p }: { p: Row }) {
   const st = PROJECT_STATUS[p.status as string] ?? PROJECT_STATUS.proposed;
   const cat = categoryStyle(p.category as string);
   return (
-    <article className="card flex flex-col">
+    <article className="card card-link relative flex flex-col">
       <div className="flex flex-wrap items-center gap-2">
         <Badge className={st.className}>{st.label}</Badge>
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
           <span className={`h-2 w-2 rounded-full ${cat.dot}`} />{p.category}
         </span>
       </div>
-      <h3 className="mt-2 text-lg font-bold leading-snug"><Link href={`/projects/${p.id}`} className="hover:text-flag-blue">{p.title}</Link></h3>
+      <h3 className="mt-2 text-lg font-bold leading-snug"><Link href={`/projects/${p.id}`} className="after:absolute after:inset-0 after:rounded-2xl hover:text-flag-blue">{p.title}</Link></h3>
       <p className="mt-1 text-sm text-slate-600">{fmtDateRange(p.start_date, p.end_date)}{p.location ? ` · ${p.location}` : ""}</p>
       <div className="mt-auto space-y-3 pt-4">
         {p.spent !== undefined && (

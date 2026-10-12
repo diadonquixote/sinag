@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge, Empty, Flash, Stat } from "@/components/ui";
+import { Badge, Empty, Flash, PageHeader, Stat } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
@@ -30,22 +30,22 @@ export default async function TreasurerDesk({ searchParams }: { searchParams: Pr
     <div className="space-y-10">
       <Flash sp={sp} />
       <section>
-        <h1 className="text-2xl font-bold">Finance assistant</h1>
-        <p className="mt-1 max-w-2xl text-slate-600">Record money in and out. Sinag builds the financial report from your ledger, computes every number itself, and writes a plain-language summary for kabataan.</p>
-        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <PageHeader eyebrow="Treasurer desk" title="Finance assistant" size="md">Record money in and out. Sinag builds the financial report from your ledger, computes every number itself, and writes a plain-language summary for kabataan.</PageHeader>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <Stat label="Total SK fund" value={peso(f.total)} /><Stat label="Other income" value={peso(f.income)} /><Stat label="Spent" value={peso(f.expense)} />
-          <Stat label="Set aside for projects" value={peso(f.committed)} /><Stat label="Available" value={peso(f.available)} />
+          <Stat label="Set aside for projects" value={peso(f.committed)} /><Stat label="Available" tone={f.available < 0 ? "red" : "green"} value={peso(f.available)} />
         </div>
-        <form action={setFund} className="mt-4 flex flex-wrap items-end gap-3">
-          <div><label className="label" htmlFor="total_fund">Total SK fund (PHP)</label><input id="total_fund" name="total_fund" inputMode="decimal" defaultValue={f.total} className="input w-48" /></div>
+        <form action={setFund} className="mt-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-mist/60 p-4">
+          <div className="min-w-0 flex-1 sm:flex-none"><label className="label" htmlFor="total_fund">Total SK fund for the year (PHP)</label><input id="total_fund" name="total_fund" inputMode="decimal" defaultValue={f.total} className="input sm:w-56" /></div>
           <SubmitButton className="btn-outline" pending="Saving...">Update fund</SubmitButton>
+          <p className="hint w-full sm:mt-0 sm:w-auto sm:flex-1 sm:self-center">The yearly budget of the SK. Income and spending are added from the ledger.</p>
         </form>
       </section>
 
       {isTreasurer && (
-        <section className="grid gap-6 lg:grid-cols-2">
-          <form action={addTransaction} className="card space-y-3">
-            <h2 className="text-lg font-bold">Record an entry</h2>
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <form action={addTransaction} className="card space-y-4 sm:p-6">
+            <div><h2 className="text-lg font-bold">Record an entry</h2><p className="hint mt-0.5">Every peso in or out. Entries can be voided later, never deleted.</p></div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className="label" htmlFor="kind">Type</label><select id="kind" name="kind" className="input"><option value="expense">Expense</option><option value="income">Income</option></select></div>
               <div><label className="label" htmlFor="amount">Amount (PHP)</label><input id="amount" name="amount" required inputMode="decimal" className="input" /></div>
@@ -62,44 +62,47 @@ export default async function TreasurerDesk({ searchParams }: { searchParams: Pr
             <SubmitButton pending="Saving...">Save entry</SubmitButton>
           </form>
 
-          <form action={createReport} className="card space-y-3">
-            <h2 className="text-lg font-bold">Generate a financial report</h2>
+          <form action={createReport} className="card flex flex-col gap-4 sm:p-6">
+            <div><h2 className="text-lg font-bold">Generate a financial report</h2><p className="hint mt-0.5">Sinag computes the numbers from the ledger and drafts a summary for you to check.</p></div>
             <div><label className="label" htmlFor="title">Report title</label><input id="title" name="title" required defaultValue={`Financial report, ${new Intl.DateTimeFormat("en-PH", { month: "long", year: "numeric", timeZone: "Asia/Manila" }).format(new Date())}`} className="input" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className="label" htmlFor="from">From</label><input id="from" name="from" type="date" required defaultValue={monthStart} className="input" /></div>
               <div><label className="label" htmlFor="to">To</label><input id="to" name="to" type="date" required defaultValue={today} className="input" /></div>
             </div>
             <p className="hint">Voided entries are left out. The report flags anything unusual, such as overspending or missing receipts.</p>
-            <SubmitButton pending="Building the report...">Generate report</SubmitButton>
+            <div className="mt-auto"><SubmitButton pending="Building the report...">Generate report</SubmitButton></div>
           </form>
         </section>
       )}
 
       <section>
-        <h2 className="text-xl font-bold">Reports</h2>
-        {reports.length === 0 ? <div className="mt-3"><Empty>No reports yet.</Empty></div> : (
-          <ul className="mt-3 space-y-2">{reports.map((r) => (
-            <li key={r.id}><Link href={`/dashboard/reports/${r.id}`} className="card flex flex-wrap items-center justify-between gap-2 py-3 hover:border-flag-blue/40">
-              <span><b>{r.title}</b><br /><span className="text-sm text-slate-500">{r.period}</span></span><Badge className={DOC_STATUS[r.status].className}>{DOC_STATUS[r.status].label}</Badge></Link></li>
+        <h2 className="mb-4 text-xl font-bold">Reports</h2>
+        {reports.length === 0 ? <Empty size="sm">No reports yet.</Empty> : (
+          <ul className="space-y-2">{reports.map((r) => (
+            <li key={r.id}><Link href={`/dashboard/reports/${r.id}`} className="card flex flex-wrap items-center justify-between gap-2 py-3 card-link">
+              <span className="min-w-0"><b className="font-semibold">{r.title}</b><br /><span className="text-xs text-slate-500">{r.period}</span></span><Badge className={DOC_STATUS[r.status].className}>{DOC_STATUS[r.status].label}</Badge></Link></li>
           ))}</ul>
         )}
       </section>
 
       <section>
-        <h2 className="text-xl font-bold">Recent ledger</h2>
-        <div className="card mt-3 overflow-x-auto">
+        <h2 className="mb-4 text-xl font-bold">Recent ledger</h2>
+        <div className="relative overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[640px] text-sm">
-            <thead><tr className="border-b text-left text-xs uppercase text-slate-500"><th className="py-2">Date</th><th>Description</th><th>Project</th><th className="text-right">Amount</th>{isTreasurer && <th />}</tr></thead>
+            <thead><tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-3 pl-5 pr-2">Date</th><th className="pr-2">Description</th><th className="pr-2">Project</th><th className="pr-5 text-right">Amount</th>{isTreasurer && <th className="pr-5"><span className="sr-only">Void</span></th>}</tr></thead>
             <tbody>
               {ledger.map((t) => (
                 <tr key={t.id} className={`border-b border-slate-100 align-top ${t.voided_at ? "text-slate-400" : ""}`}>
-                  <td className="py-2 pr-2 whitespace-nowrap">{fmtDate(t.tx_date, "short")}</td>
-                  <td className="pr-2"><span className={t.voided_at ? "line-through" : ""}>{t.description}</span>{t.reference ? <span className="text-slate-400"> ({t.reference})</span> : null}{t.voided_at && <div className="text-xs">Voided: {t.void_reason}</div>}</td>
-                  <td className="pr-2">{t.project ?? ""}</td>
-                  <td className={`text-right font-semibold ${t.voided_at ? "line-through" : t.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{t.kind === "income" ? "+" : "−"}{peso(t.amount)}</td>
-                  {isTreasurer && <td className="pl-3">{!t.voided_at && (
-                    <form action={voidTransaction} className="flex gap-1"><input type="hidden" name="id" value={t.id} />
-                      <input name="reason" required placeholder="Reason to void" aria-label="Reason to void" className="input w-36 py-1 text-xs" /><SubmitButton className="btn-outline btn-sm" pending="...">Void</SubmitButton></form>)}</td>}
+                  <td className="whitespace-nowrap py-3 pl-5 pr-2">{fmtDate(t.tx_date, "short")}</td>
+                  <td className="py-3 pr-2"><span className={t.voided_at ? "line-through" : ""}>{t.description}</span>{t.reference ? <span className="text-slate-400"> ({t.reference})</span> : null}{t.voided_at && <div className="text-xs">Voided: {t.void_reason}</div>}</td>
+                  <td className="py-3 pr-2 text-slate-600">{t.project ?? ""}</td>
+                  <td className={`whitespace-nowrap py-3 pr-5 text-right font-semibold tabular-nums ${t.voided_at ? "line-through" : t.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{t.kind === "income" ? "+" : "−"}{peso(t.amount)}</td>
+                  {isTreasurer && <td className="py-2 pr-5 text-right">{!t.voided_at && (
+                    <details className="group relative inline-block text-left">
+                      <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-red-50 hover:text-flag-red [&::-webkit-details-marker]:hidden">Void</summary>
+                      <form action={voidTransaction} className="absolute right-0 z-10 mt-1 flex w-72 gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"><input type="hidden" name="id" value={t.id} />
+                        <input name="reason" required placeholder="Why void this entry?" aria-label="Reason to void" className="input py-1.5 text-xs" /><SubmitButton className="btn-red btn-sm" pending="...">Void</SubmitButton></form>
+                    </details>)}</td>}
                 </tr>
               ))}
             </tbody>

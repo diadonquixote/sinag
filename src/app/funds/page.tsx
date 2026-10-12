@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader, Stat, Empty, ProgressBar } from "@/components/ui";
+import { PageHeader, SectionHeader, Stat, Empty, ProgressBar } from "@/components/ui";
 import { sql, type Row } from "@/lib/db";
 import { fundSummary } from "@/lib/funds";
 import { fmtDate, peso, pct } from "@/lib/format";
@@ -20,7 +20,7 @@ export default async function FundsPage() {
       order by t.tx_date desc, t.id desc limit 80`,
   ]);
   return (
-    <div className="container-x py-12">
+    <div className="container-x py-10 sm:py-12">
       <PageHeader eyebrow="Fund transparency" title="Where the money is">
         The SK fund, what is set aside for funded projects, what has been spent, and every ledger entry.
       </PageHeader>
@@ -29,34 +29,33 @@ export default async function FundsPage() {
         <Stat label="Other income" value={peso(f.income)} />
         <Stat label="Spent so far" value={peso(f.expense)} />
         <Stat label="Set aside for projects" value={peso(f.committed)} />
-        <Stat label="Still available" value={peso(f.available)} />
+        <Stat label="Still available" tone={f.available < 0 ? "red" : "green"} value={peso(f.available)} />
       </div>
 
-      <h2 className="mt-12 text-2xl font-bold">Budget versus spending</h2>
-      {projects.length === 0 ? <div className="mt-4"><Empty>No funded projects yet.</Empty></div> : (
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-14"><SectionHeader as="h3" title="Budget versus spending">How much of each funded project's budget has been used.</SectionHeader></div>
+      {projects.length === 0 ? <Empty>No funded projects yet.</Empty> : (
+        <div className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (
-            <Link key={p.id} href={`/projects/${p.id}`} className="card block hover:border-flag-blue/40">
-              <h3 className="font-bold">{p.title}</h3>
+            <Link key={p.id} href={`/projects/${p.id}`} className="card block card-link">
+              <h3 className="font-display text-lg font-bold leading-snug">{p.title}</h3>
               <div className="mt-3"><ProgressBar value={pct(p.spent, p.budget)} label={`${peso(p.spent)} of ${peso(p.budget)}`} /></div>
             </Link>
           ))}
         </div>
       )}
 
-      <h2 className="mt-12 text-2xl font-bold">Ledger</h2>
-      <p className="mt-1 text-sm text-slate-600">Entries are never erased. A mistake is voided and stays visible with its reason.</p>
-      <div className="card mt-4 overflow-x-auto">
+      <div className="mt-14"><SectionHeader as="h3" title="Ledger">Entries are never erased. A mistake is voided and stays visible with its reason.</SectionHeader></div>
+      <div className="relative overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[620px] text-sm">
-          <thead><tr className="border-b text-left text-xs uppercase text-slate-500"><th className="py-2">Date</th><th>Description</th><th>Project</th><th>Ref</th><th className="text-right">Amount</th></tr></thead>
+          <thead><tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-3 pl-5 pr-2">Date</th><th className="pr-2">Description</th><th className="pr-2">Project</th><th className="pr-2">Ref</th><th className="pr-5 text-right">Amount</th></tr></thead>
           <tbody>
             {ledger.map((t) => (
-              <tr key={t.id} className={`border-b border-slate-100 ${t.voided_at ? "text-slate-400" : ""}`}>
-                <td className="py-2 pr-2 whitespace-nowrap">{fmtDate(t.tx_date, "short")}</td>
-                <td className="pr-2"><span className={t.voided_at ? "line-through" : ""}>{t.description}</span>{t.voided_at && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs">Voided: {t.void_reason}</span>}</td>
-                <td className="pr-2">{t.project ?? ""}</td>
-                <td className="pr-2">{t.reference ?? ""}</td>
-                <td className={`text-right font-semibold ${t.voided_at ? "line-through" : t.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{t.kind === "income" ? "+" : "−"}{peso(t.amount)}</td>
+              <tr key={t.id} className={`border-b border-slate-100 last:border-0 ${t.voided_at ? "text-slate-400" : ""}`}>
+                <td className="whitespace-nowrap py-3 pl-5 pr-2">{fmtDate(t.tx_date, "short")}</td>
+                <td className="py-3 pr-2"><span className={t.voided_at ? "line-through" : ""}>{t.description}</span>{t.voided_at && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs">Voided: {t.void_reason}</span>}</td>
+                <td className="py-3 pr-2 text-slate-600">{t.project ?? ""}</td>
+                <td className="py-3 pr-2 font-mono text-xs text-slate-500">{t.reference ?? ""}</td>
+                <td className={`whitespace-nowrap py-3 pr-5 text-right font-semibold tabular-nums ${t.voided_at ? "line-through" : t.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{t.kind === "income" ? "+" : "−"}{peso(t.amount)}</td>
               </tr>
             ))}
           </tbody>

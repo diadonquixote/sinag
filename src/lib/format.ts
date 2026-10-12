@@ -37,10 +37,28 @@ export function fmtDateTime(value: string | Date | null | undefined): string {
   }).format(d);
 }
 
+/** "Oct 11–18, 2026", "Oct 19 – Nov 6, 2026", or "Dec 28, 2026 – Jan 3, 2027". */
 export function fmtDateRange(start: string | null | undefined, end: string | null | undefined): string {
   if (!start) return "Date to be announced";
   if (!end || end === start) return fmtDate(start);
-  return `${fmtDate(start, "short")} – ${fmtDate(end)}`;
+  const a = toDate(start), b = toDate(end);
+  if (!valid(a) || !valid(b)) return `${fmtDate(start, "short")} – ${fmtDate(end)}`;
+  const part = (d: Date, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-PH", { ...o, timeZone: TZ }).format(d);
+  const [ya, yb] = [part(a, { year: "numeric" }), part(b, { year: "numeric" })];
+  const [ma, mb] = [part(a, { month: "short" }), part(b, { month: "short" })];
+  const [da, db] = [part(a, { day: "numeric" }), part(b, { day: "numeric" })];
+  if (ya === yb && ma === mb) return `${ma} ${da}–${db}, ${ya}`;
+  if (ya === yb) return `${ma} ${da} – ${mb} ${db}, ${ya}`;
+  return `${ma} ${da}, ${ya} – ${mb} ${db}, ${yb}`;
+}
+
+/** Month and day parts for a calendar-style date tile. */
+export function dateTile(value: string | null | undefined): { month: string; day: string } | null {
+  if (!value) return null;
+  const d = toDate(value);
+  if (!valid(d)) return null;
+  const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-PH", { ...o, timeZone: TZ }).format(d);
+  return { month: f({ month: "short" }).toUpperCase(), day: f({ day: "numeric" }) };
 }
 
 export function peso(value: number | string | null | undefined): string {
@@ -79,4 +97,10 @@ export function pct(part: number, whole: number): number {
 
 export function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+/** "Maria Reyes" -> "MR". Used for avatar circles. */
+export function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
 }

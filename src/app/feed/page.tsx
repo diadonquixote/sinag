@@ -1,12 +1,11 @@
-import Link from "next/link";
 import FeedItem from "@/components/FeedItem";
-import { Empty, PageHeader } from "@/components/ui";
+import { Empty, FilterChips, PageHeader } from "@/components/ui";
 import { getFeed } from "@/lib/queries";
 import { first } from "@/lib/format";
 
 export const metadata = { title: "Public bulletin" };
 
-const TABS = [
+const TABS: [string, string][] = [
   ["", "Everything"],
   ["minutes", "Minutes"],
   ["report", "Financial reports"],
@@ -19,16 +18,12 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   const type = first(sp.type) ?? "";
   const items = await getFeed(60, type || null);
   return (
-    <div className="container-x py-12">
+    <div className="container-x py-10 sm:py-12">
       <PageHeader eyebrow="Public bulletin" title="Everything the SK posts">
         Minutes, financial reports, project news and updates. Nothing is posted until the Chairperson approves it.
       </PageHeader>
-      <div className="mb-6 flex flex-wrap gap-2">
-        {TABS.map(([v, label]) => (
-          <Link key={v} href={v ? `/feed?type=${v}` : "/feed"} className={`rounded-full px-4 py-1.5 text-sm font-semibold ring-1 ring-inset ${type === v ? "bg-flag-blue text-white ring-flag-blue" : "bg-white text-slate-700 ring-slate-300 hover:ring-flag-blue"}`}>
-            {label}
-          </Link>
-        ))}
+      <div className="mb-8">
+        <FilterChips label="Show" current={type} items={TABS} href={(v) => (v ? `/feed?type=${v}` : "/feed")} />
       </div>
       {items.length === 0 ? <Empty>Nothing here yet.</Empty> : (
         <div className="grid gap-4 md:grid-cols-2">{items.map((f) => <FeedItem key={`${f.type}-${f.id}`} item={f} />)}</div>

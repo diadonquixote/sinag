@@ -12,12 +12,12 @@ export default async function PublicReport({ params }: { params: Promise<{ id: s
     where r.id = ${id} and r.status = 'published'`;
   if (!r) notFound();
   return (
-    <div className="container-x max-w-4xl py-12">
-      <Link href="/feed" className="text-sm font-semibold text-flag-blue">← Back to bulletin</Link>
+    <div className="container-x py-10 sm:py-12"><div className="max-w-4xl">
+      <Link href="/feed" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>Back to bulletin</Link>
       <p className="eyebrow mt-6">Financial report</p>
       <h1 className="mt-1 text-3xl font-bold">{r.title}</h1>
       <p className="mt-1 text-sm text-slate-600">{r.period} · Prepared by {r.author}{r.approver ? ` · Approved by ${r.approver}` : ""}</p>
       <div className="mt-6"><ReportView content={r.content} data={r.data} /></div>
-    </div>
+    </div></div>
   );
 }

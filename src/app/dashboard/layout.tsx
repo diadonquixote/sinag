@@ -1,29 +1,45 @@
-import Link from "next/link";
 import { requireRole } from "@/lib/auth";
-import { ROLE_HOME, ROLE_LABEL, type Role } from "@/lib/roles";
+import { ROLE_LABEL, type Role } from "@/lib/roles";
+import { initials } from "@/lib/format";
+import { DeskTabs, type NavItem } from "@/components/NavLinks";
 
-const NAV: Record<Role, [string, string][]> = {
-  chairperson: [["/dashboard/chair", "Approvals & polls"], ["/dashboard/secretary", "Minutes"], ["/dashboard/treasurer", "Finance"], ["/dashboard/team", "Team"]],
-  secretary: [["/dashboard/secretary", "Minutes assistant"]],
-  treasurer: [["/dashboard/treasurer", "Finance assistant"]],
-  kagawad: [["/dashboard/kagawad", "My projects"]],
-  kabataan: [["/dashboard", "My activity"]],
+const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
+  chairperson: [
+    { href: "/dashboard/chair", label: "Approvals & polls" },
+    { href: "/dashboard/secretary", label: "Minutes" },
+    { href: "/dashboard/treasurer", label: "Finance" },
+    { href: "/dashboard/team", label: "Team" },
+  ],
+  secretary: [{ href: "/dashboard/secretary", label: "Minutes assistant" }],
+  treasurer: [{ href: "/dashboard/treasurer", label: "Finance assistant" }],
+  kagawad: [{ href: "/dashboard/kagawad", label: "My projects" }],
+  kabataan: [{ href: "/dashboard", label: "My activity", exact: true }],
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireRole();
+  const tabs = [...NAV[user.role], { href: "/dashboard/account", label: "Account" }];
+  // Minutes and report pages belong to the Minutes / Finance tabs.
+  const withDocs = tabs.map((t) =>
+    t.href === "/dashboard/secretary" ? { ...t, also: "/dashboard/minutes" } : t.href === "/dashboard/treasurer" ? { ...t, also: "/dashboard/reports" } : t,
+  );
   return (
-    <div className="container-x py-8">
-      <div className="mb-8 rounded-2xl bg-mist p-4 ring-1 ring-slate-200">
-        <p className="text-sm text-slate-600">Signed in as <b className="text-ink">{user.name}</b> · {ROLE_LABEL[user.role]}</p>
-        <nav className="mt-3 flex flex-wrap gap-2" aria-label="Desk">
-          {NAV[user.role].map(([href, label]) => (
-            <Link key={href} href={href} className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-flag-blue ring-1 ring-inset ring-slate-300 hover:ring-flag-blue">{label}</Link>
-          ))}
-          <Link href="/dashboard/account" className="rounded-full px-4 py-1.5 text-sm font-semibold text-slate-600 hover:text-flag-blue">Account</Link>
-        </nav>
+    <>
+      <div className="border-b border-slate-200 bg-gradient-to-b from-mist to-white">
+        <div className="container-x pt-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-flag-blue font-bold text-white ring-4 ring-white">{initials(user.name)}</span>
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-ink">{user.name}</p>
+              <p className="text-xs font-medium text-slate-500">{ROLE_LABEL[user.role]}</p>
+            </div>
+          </div>
+          <div className="mt-5">
+            <DeskTabs links={withDocs} />
+          </div>
+        </div>
       </div>
-      {children}
-    </div>
+      <div className="container-x py-8 sm:py-10">{children}</div>
+    </>
   );
 }

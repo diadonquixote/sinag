@@ -11,7 +11,7 @@ export default async function NewIdea({ searchParams }: { searchParams: Promise<
   const sp = await searchParams;
   if (!(await currentUser())) redirect("/login");
   return (
-    <div className="container-x max-w-2xl py-12">
+    <div className="container-x py-10 sm:py-12"><div className="max-w-2xl">
       <PageHeader eyebrow="Your idea" title="Suggest a project">
         What would make our community better? The SK reviews every idea. Approved ideas go to a vote.
       </PageHeader>
@@ -26,6 +26,6 @@ export default async function NewIdea({ searchParams }: { searchParams: Promise<
           <input id="est_budget" name="est_budget" inputMode="decimal" defaultValue="0" className="input" /><p className="hint">A rough guess is fine. Put 0 if you are not sure.</p></div>
         <SubmitButton pending="Sending...">Send my idea</SubmitButton>
       </form>
-    </div>
+    </div></div>
   );
 }

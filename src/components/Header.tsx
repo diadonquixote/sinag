@@ -1,11 +1,14 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import PdynLogo from "./PdynLogo";
+import MobileMenu from "./MobileMenu";
+import { NavLinks, type NavItem } from "./NavLinks";
 import { getSession } from "@/lib/auth";
 import { ROLE_HOME, ROLE_LABEL } from "@/lib/roles";
 import { logout } from "@/actions/auth";
+import { initials } from "@/lib/format";
 
-const LINKS = [
+const LINKS: NavItem[] = [
   { href: "/feed", label: "Bulletin" },
   { href: "/projects", label: "Projects" },
   { href: "/calendar", label: "Calendar" },
@@ -16,54 +19,69 @@ const LINKS = [
 export default async function Header() {
   const user = await getSession();
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-blue to-flag-red" />
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+      <div className="h-1 bg-gradient-to-r from-flag-blue via-flag-yellow to-flag-red" />
       <div className="container-x flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Logo />
-          <span className="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true" />
+          <span className="hidden h-7 w-px bg-slate-200 sm:block" aria-hidden="true" />
           <PdynLogo className="hidden sm:inline-flex" />
         </div>
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-mist hover:text-flag-blue">
-              {l.label}
-            </Link>
-          ))}
+
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
+          <NavLinks links={LINKS} variant="bar" />
         </nav>
+
+        <div className="flex items-center gap-2">
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <>
-              <Link href="/dashboard" className="btn-outline btn-sm">{ROLE_LABEL[user.role]} desk</Link>
-              <form action={logout}><button className="btn-sm btn text-slate-600 hover:text-flag-red">Log out</button></form>
+              <Link href={ROLE_HOME[user.role]} className="group flex items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3.5 text-sm font-semibold text-ink transition hover:border-flag-blue hover:text-flag-blue">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-flag-blue text-[11px] font-bold text-white">{initials(user.name)}</span>
+                My desk
+              </Link>
+              <form action={logout}>
+                <button className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 transition hover:text-flag-red">Log out</button>
+              </form>
             </>
           ) : (
             <>
-              <Link href="/login" className="btn-outline btn-sm">Log in</Link>
+              <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:text-flag-blue">Log in</Link>
               <Link href="/register" className="btn-primary btn-sm">Join as kabataan</Link>
             </>
           )}
         </div>
-        <details className="relative md:hidden">
-          <summary className="btn-outline btn-sm cursor-pointer list-none">Menu</summary>
-          <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
-            {LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="block rounded-lg px-3 py-2.5 text-sm font-semibold hover:bg-mist">{l.label}</Link>
-            ))}
-            <div className="my-1 border-t border-slate-100" />
-            {user ? (
-              <>
-                <Link href={ROLE_HOME[user.role]} className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-flag-blue hover:bg-mist">{ROLE_LABEL[user.role]} desk</Link>
-                <form action={logout}><button className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-flag-red hover:bg-red-50">Log out</button></form>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="block rounded-lg px-3 py-2.5 text-sm font-semibold hover:bg-mist">Log in</Link>
-                <Link href="/register" className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-flag-blue hover:bg-mist">Join as kabataan</Link>
-              </>
-            )}
-          </div>
-        </details>
+
+        {/* Below the large breakpoint the page links move into the menu; account buttons stay visible from md up. */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <MobileMenu>
+            <nav aria-label="Main" className="flex flex-col gap-0.5">
+              <NavLinks links={LINKS} variant="menu" />
+            </nav>
+            <div className="mt-3 border-t border-slate-100 pt-3 md:hidden">
+              {user ? (
+                <div className="flex flex-col gap-2">
+                  <Link href={ROLE_HOME[user.role]} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-mist">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-flag-blue text-xs font-bold text-white">{initials(user.name)}</span>
+                    <span>
+                      <span className="block text-sm font-semibold text-ink">{user.name}</span>
+                      <span className="block text-xs text-slate-500">{ROLE_LABEL[user.role]} · open my desk</span>
+                    </span>
+                  </Link>
+                  <form action={logout}>
+                    <button className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-flag-red hover:bg-red-50">Log out</button>
+                  </form>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/login" className="btn-outline">Log in</Link>
+                  <Link href="/register" className="btn-primary">Join as kabataan</Link>
+                </div>
+              )}
+            </div>
+          </MobileMenu>
+        </div>
+        </div>
       </div>
     </header>
   );

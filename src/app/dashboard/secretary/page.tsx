@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge, Empty, Flash } from "@/components/ui";
+import { Badge, Empty, Flash, Notice, PageHeader } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import NotesInput from "@/components/NotesInput";
 import { sql, type Row } from "@/lib/db";
@@ -23,10 +23,9 @@ export default async function SecretaryDesk({ searchParams }: { searchParams: Pr
     <div className="space-y-10">
       <Flash sp={sp} />
       <section>
-        <h1 className="text-2xl font-bold">Minutes assistant</h1>
-        <p className="mt-1 max-w-2xl text-slate-600">Paste your raw notes. Sinag turns them into clear minutes with attendance, decisions, action items and draft resolutions. You check it, then the Chairperson approves it before it goes public.</p>
-        {!aiConfigured() && <p className="mt-3 rounded-lg bg-yellow-50 px-3 py-2 text-sm text-yellow-900">AI is not connected, so drafts will be simple. Add NEBIUS_API_KEY to enable the full assistant.</p>}
-        <form action={createMinutes} className="card mt-5 space-y-4">
+        <PageHeader eyebrow="Secretary desk" title="Minutes assistant" size="md">Paste your raw notes. Sinag turns them into clear minutes with attendance, decisions, action items and draft resolutions. You check it, then the Chairperson approves it before it goes public.</PageHeader>
+        {!aiConfigured() && <Notice>AI is not connected, so drafts will be simple. Add NEBIUS_API_KEY to enable the full assistant.</Notice>}
+        <form action={createMinutes} className="card space-y-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div><label className="label" htmlFor="title">Meeting title</label><input id="title" name="title" required defaultValue="Regular Session" className="input" /></div>
             <div><label className="label" htmlFor="session_date">Date of meeting</label><input id="session_date" name="session_date" type="date" required defaultValue={todayManila()} className="input" /></div>
@@ -36,12 +35,12 @@ export default async function SecretaryDesk({ searchParams }: { searchParams: Pr
         </form>
       </section>
       <section>
-        <h2 className="text-xl font-bold">{user.role === "chairperson" ? "All minutes" : "Your minutes"}</h2>
-        {rows.length === 0 ? <div className="mt-3"><Empty>No minutes yet.</Empty></div> : (
-          <ul className="mt-3 space-y-2">
+        <h2 className="mb-4 text-xl font-bold">{user.role === "chairperson" ? "All minutes" : "Your minutes"}</h2>
+        {rows.length === 0 ? <Empty size="sm">No minutes yet.</Empty> : (
+          <ul className="space-y-2">
             {rows.map((m) => (
-              <li key={m.id}><Link href={`/dashboard/minutes/${m.id}`} className="card flex flex-wrap items-center justify-between gap-2 py-3 hover:border-flag-blue/40">
-                <span><b>{m.title}</b><br /><span className="text-sm text-slate-500">{fmtDate(m.session_date)}{user.role === "chairperson" ? ` · ${m.author}` : ""}</span></span>
+              <li key={m.id}><Link href={`/dashboard/minutes/${m.id}`} className="card flex flex-wrap items-center justify-between gap-2 py-3 card-link">
+                <span className="min-w-0"><b className="font-semibold">{m.title}</b><br /><span className="text-xs text-slate-500">{fmtDate(m.session_date)}{user.role === "chairperson" ? ` · ${m.author}` : ""}</span></span>
                 <Badge className={DOC_STATUS[m.status].className}>{DOC_STATUS[m.status].label}</Badge>
               </Link></li>
             ))}

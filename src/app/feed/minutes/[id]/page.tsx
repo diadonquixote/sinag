@@ -13,11 +13,11 @@ export default async function PublicMinutes({ params }: { params: Promise<{ id: 
     where m.id = ${id} and m.status = 'published'`;
   if (!m) notFound();
   return (
-    <div className="container-x max-w-3xl py-12">
-      <Link href="/feed" className="text-sm font-semibold text-flag-blue">← Back to bulletin</Link>
+    <div className="container-x py-10 sm:py-12"><div className="max-w-3xl">
+      <Link href="/feed" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>Back to bulletin</Link>
       <p className="eyebrow mt-6">Minutes of the meeting</p>
       <p className="mt-1 text-sm text-slate-600">Held {fmtDate(m.session_date)} · Recorded by {m.author}{m.approver ? ` · Approved by ${m.approver}` : ""}</p>
       <div className="card mt-6"><RichText text={m.content} /></div>
-    </div>
+    </div></div>
   );
 }

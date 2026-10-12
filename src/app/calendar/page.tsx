@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Empty, PageHeader } from "@/components/ui";
+import { DateTile, Empty, PageHeader } from "@/components/ui";
 import { getMonthEvents } from "@/lib/queries";
 import { categoryStyle } from "@/lib/roles";
 import { first, fmtDateRange, todayManila } from "@/lib/format";
@@ -34,25 +34,28 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const onDay = (day: string) => events.filter((e) => e.start_date <= day && (e.end_date ?? e.start_date) >= day);
 
   return (
-    <div className="container-x py-12">
+    <div className="container-x py-10 sm:py-12">
       <PageHeader eyebrow="Calendar" title="What is happening, and when">
         Every scheduled SK project. Tap an event for its details and budget.
       </PageHeader>
-      <div className="mb-4 flex items-center justify-between">
-        <Link href={`/calendar?m=${prev}`} className="btn-outline btn-sm">← Previous</Link>
-        <h2 className="text-xl font-bold">{label}</h2>
-        <Link href={`/calendar?m=${next}`} className="btn-outline btn-sm">Next →</Link>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold">{label}</h2>
+        <div className="flex items-center gap-1">
+          <Link href={`/calendar?m=${prev}`} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-flag-blue hover:text-flag-blue">←</Link>
+          <Link href="/calendar" className="flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-flag-blue hover:text-flag-blue">Today</Link>
+          <Link href={`/calendar?m=${next}`} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-flag-blue hover:text-flag-blue">→</Link>
+        </div>
       </div>
 
-      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 md:block">
-        <div className="grid grid-cols-7 bg-flag-blue text-center text-xs font-bold uppercase tracking-wide text-white">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <div key={d} className="py-2">{d}</div>)}
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <div key={d} className="py-2.5">{d}</div>)}
         </div>
         <div className="grid grid-cols-7">
           {cells.map((day) => {
             const inMonth = day.slice(0, 7) === m;
             return (
-              <div key={day} className={`min-h-28 border-b border-r border-slate-100 p-1.5 ${inMonth ? "bg-white" : "bg-slate-50"}`}>
+              <div key={day} className={`min-h-28 border-b border-r border-slate-100 p-1.5 [&:nth-child(7n)]:border-r-0 ${inMonth ? "bg-white" : "bg-slate-50/70"}`}>
                 <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${day === today ? "bg-flag-red text-white" : inMonth ? "text-ink" : "text-slate-400"}`}>{Number(day.slice(8))}</span>
                 <div className="mt-1 space-y-1">
                   {inMonth && onDay(day).map((e) => (
@@ -66,14 +69,18 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       </div>
 
       <div className="mt-6 md:mt-8">
-        <h3 className="mb-3 text-lg font-bold">This month</h3>
+        <h3 className="mb-3 text-xl font-bold">This month</h3>
         {events.length === 0 ? <Empty>No projects are scheduled this month.</Empty> : (
           <ul className="space-y-2">
             {events.map((e) => (
               <li key={e.id}>
-                <Link href={`/projects/${e.id}`} className="card flex items-center justify-between gap-3 py-3 hover:border-flag-blue/40">
-                  <span><b>{e.title}</b><br /><span className="text-sm text-slate-600">{fmtDateRange(e.start_date, e.end_date)}{e.location ? ` · ${e.location}` : ""}</span></span>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${categoryStyle(e.category).chip}`}>{e.category}</span>
+                <Link href={`/projects/${e.id}`} className="card card-link flex items-center gap-4 py-4">
+                  <DateTile value={e.start_date} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-ink">{e.title}</span>
+                    <span className="block text-sm text-slate-500">{fmtDateRange(e.start_date, e.end_date)}{e.location ? ` · ${e.location}` : ""}</span>
+                  </span>
+                  <span className={`hidden shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold sm:inline ${categoryStyle(e.category).chip}`}>{e.category}</span>
                 </Link>
               </li>
             ))}

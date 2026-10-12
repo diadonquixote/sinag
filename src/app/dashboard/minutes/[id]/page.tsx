@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import DocPanel from "@/components/DocPanel";
 import NotesInput from "@/components/NotesInput";
 import SubmitButton from "@/components/SubmitButton";
-import { Flash } from "@/components/ui";
+import { Flash, Notice } from "@/components/ui";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { fmtDate, peso } from "@/lib/format";
@@ -23,19 +23,19 @@ export default async function MinutesEditor({ params, searchParams }: { params: 
 
   return (
     <div className="space-y-6">
-      <Link href="/dashboard/secretary" className="text-sm font-semibold text-flag-blue">← All minutes</Link>
+      <Link href="/dashboard/secretary" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>All minutes</Link>
       <Flash sp={sp} />
-      <h1 className="text-2xl font-bold">{m.title} <span className="text-base font-normal text-slate-500">· {fmtDate(m.session_date)}</span></h1>
+      <div><p className="eyebrow">Minutes</p><h1 className="mt-1.5 text-3xl font-bold leading-tight">{m.title}</h1><p className="mt-1 text-sm text-slate-500">Meeting held {fmtDate(m.session_date)}</p></div>
       {data?.budget_check && data.budget_check.total > 0 && (
         <div className={`rounded-xl border px-4 py-3 text-sm ${data.budget_check.over ? "border-red-200 bg-red-50 text-flag-red" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
           Budget items in these minutes add up to <b>{peso(data.budget_check.total)}</b>. {data.budget_check.over ? `That is more than the ${peso(data.budget_check.available)} available at the time of drafting.` : `The fund can cover it (${peso(data.budget_check.available)} available at the time of drafting).`}
         </div>
       )}
-      {data?.used_ai === false && <p className="rounded-lg bg-yellow-50 px-3 py-2 text-sm text-yellow-900">This is a simple draft (AI was unavailable). Please review it carefully.</p>}
+      {data?.used_ai === false && <Notice>This is a simple draft because AI was unavailable. Please review it carefully.</Notice>}
       <DocPanel kind="minutes" doc={m} user={user} rich />
       {m.status !== "published" && (
-        <details className="card">
-          <summary className="cursor-pointer font-semibold">Fix the raw notes and regenerate</summary>
+        <details className="card group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">Fix the raw notes and regenerate <span aria-hidden="true" className="text-slate-400 transition-transform group-open:rotate-180">⌄</span></summary>
           <form action={regenerateMinutes} className="mt-4 space-y-3">
             <input type="hidden" name="id" value={m.id} /><input type="hidden" name="kind" value="minutes" />
             <NotesInput canScan={false} defaultValue={String(m.raw_notes)} />

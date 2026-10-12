@@ -1,4 +1,4 @@
-import { Empty, Flash } from "@/components/ui";
+import { Empty, Flash, PageHeader } from "@/components/ui";
 import ProjectCard from "@/components/ProjectCard";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
@@ -15,8 +15,7 @@ export default async function KagawadDesk({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-6">
       <Flash sp={sp} />
-      <h1 className="text-2xl font-bold">Projects you lead</h1>
-      <p className="max-w-2xl text-slate-600">Open a project to post an update. Updates go straight to the public feed, so keep them short and factual. You can ask Sinag to polish your wording.</p>
+      <PageHeader eyebrow="Kagawad desk" title="Projects you lead" size="md">Open a project to post an update. Updates go straight to the public feed, so keep them short and factual. You can ask Sinag to polish your wording.</PageHeader>
       {mine.length === 0 ? <Empty>The Chairperson has not made you point person on a project yet.</Empty> : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{mine.map((p) => <ProjectCard key={p.id} p={p} />)}</div>
       )}

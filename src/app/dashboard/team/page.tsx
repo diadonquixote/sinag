@@ -1,8 +1,9 @@
-import { Flash } from "@/components/ui";
+import { Flash, PageHeader } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
+import { initials } from "@/lib/format";
 import { createOfficial } from "@/actions/auth";
 
 export const metadata = { title: "Team" };
@@ -14,9 +15,17 @@ export default async function Team({ searchParams }: { searchParams: Promise<Rec
   return (
     <div className="space-y-8">
       <Flash sp={sp} />
-      <h1 className="text-2xl font-bold">SK team</h1>
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {team.map((u) => <li key={u.id} className="card py-3"><b>{u.name}</b><br /><span className="text-sm text-slate-600">{ROLE_LABEL[u.role as Role]} · {u.email}</span></li>)}
+      <PageHeader eyebrow="Chairperson desk" title="SK team" size="md">Everyone who can log in to an official desk. Add new officials below and share their temporary password privately.</PageHeader>
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {team.map((u) => (
+          <li key={u.id} className="card flex items-center gap-3 py-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mist text-sm font-bold text-flag-blue ring-1 ring-inset ring-slate-200">{initials(u.name as string)}</span>
+            <span className="min-w-0">
+              <span className="block truncate font-semibold text-ink">{u.name}</span>
+              <span className="block truncate text-xs text-slate-500">{ROLE_LABEL[u.role as Role]} · {u.email}</span>
+            </span>
+          </li>
+        ))}
       </ul>
       <form action={createOfficial} className="card max-w-xl space-y-3">
         <h2 className="text-lg font-bold">Add an official</h2>

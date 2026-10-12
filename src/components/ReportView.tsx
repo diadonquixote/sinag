@@ -8,15 +8,15 @@ export default function ReportView({ content, data }: { content: string; data: R
     <div className="space-y-6">
       {data && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Money in" value={peso(data.income)} />
-          <Stat label="Money out" value={peso(data.expense)} />
-          <Stat label="Net change" value={peso(data.net)} />
-          <Stat label="Still available" value={peso(data.fund.available)} />
+          <Stat label="Money in" tone="green" value={peso(data.income)} />
+          <Stat label="Money out" tone="red" value={peso(data.expense)} />
+          <Stat label="Net change" tone={data.net < 0 ? "red" : "green"} value={`${data.net > 0 ? "+" : ""}${peso(data.net)}`} />
+          <Stat label="Still available" tone="blue" value={peso(data.fund.available)} />
         </div>
       )}
       <div className="card">
         <h2 className="text-lg font-bold">In plain words</h2>
-        <div className="mt-2 space-y-3 text-slate-700">{content.split(/\n\n+/).map((p, i) => <p key={i}>{p}</p>)}</div>
+        <div className="mt-2 space-y-3 leading-relaxed text-slate-700">{content.split(/\n\n+/).map((p, i) => <p key={i}>{p}</p>)}</div>
       </div>
       {data?.flags?.length ? (
         <div className="rounded-2xl border border-yellow-300 bg-yellow-50 p-5">
@@ -38,7 +38,7 @@ export default function ReportView({ content, data }: { content: string; data: R
         </div>
       )}
       {data && data.lines.length > 0 && (
-        <div className="card overflow-x-auto">
+        <div className="card relative overflow-x-auto">
           <h2 className="text-lg font-bold">Every entry</h2>
           <table className="mt-3 w-full min-w-[560px] text-sm">
             <thead><tr className="border-b text-left text-xs uppercase text-slate-500"><th className="py-2">Date</th><th>Description</th><th>Project</th><th>Ref</th><th className="text-right">Amount</th></tr></thead>

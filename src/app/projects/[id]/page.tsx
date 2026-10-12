@@ -5,7 +5,7 @@ import SubmitButton from "@/components/SubmitButton";
 import { sql, type Row } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { categoryStyle, PROJECT_STATUS } from "@/lib/roles";
-import { fmtDateRange, fmtDateTime, peso, pct, todayManila } from "@/lib/format";
+import { fmtDateRange, fmtDateTime, initials, peso, pct, todayManila } from "@/lib/format";
 import { fundSummary } from "@/lib/funds";
 import type { Proposal } from "@/lib/types";
 import { approveProject, postUpdate, scheduleProject, toggleVolunteer, updateProposalBudget } from "@/actions/projects";
@@ -51,8 +51,8 @@ export default async function ProjectPage({
   const joined = !!user && volunteers.some((v) => v.user_id === user.id);
 
   return (
-    <div className="container-x max-w-5xl py-12">
-      <Link href="/projects" className="text-sm font-semibold text-flag-blue">← All projects</Link>
+    <div className="container-x py-10 sm:py-12">
+      <Link href="/projects" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>All projects</Link>
       <div className="mt-4"><Flash sp={sp} /></div>
       <div className="flex flex-wrap items-center gap-2">
         <Badge className={st.className}>{st.label}</Badge>
@@ -62,7 +62,7 @@ export default async function ProjectPage({
       <p className="mt-2 text-slate-600">{fmtDateRange(p.start_date, p.end_date)}{p.location ? ` · ${p.location}` : ""}{p.lead_name ? ` · Point person: ${p.lead_name}` : ""}</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <section className="card">
             <h2 className="text-lg font-bold">About this project</h2>
             <p className="mt-2 whitespace-pre-line text-slate-700">{p.description}</p>
@@ -77,12 +77,13 @@ export default async function ProjectPage({
               {proposal.objectives?.length > 0 && <div><h3 className="font-bold">Objectives</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.objectives.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
               {proposal.activities?.length > 0 && <div><h3 className="font-bold">Activities</h3><ul className="mt-1 space-y-1 text-sm text-slate-700">{proposal.activities.map((a, i) => <li key={i}><b>{a.name}.</b> {a.description}</li>)}</ul></div>}
               {proposal.budget_lines?.length > 0 && (
-                <div className="overflow-x-auto"><h3 className="font-bold">Budget breakdown</h3>
+                <div className="relative overflow-x-auto"><h3 className="font-bold">Budget breakdown</h3>
                   <table className="mt-2 w-full min-w-[420px] text-sm">
-                    <thead><tr className="border-b text-left text-xs uppercase text-slate-500"><th className="py-1">Item</th><th>Qty</th><th>Unit cost</th><th className="text-right">Total</th></tr></thead>
+                    <thead><tr className="border-b border-slate-200 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-2">Item</th><th>Qty</th><th>Unit cost</th><th className="text-right">Total</th></tr></thead>
                     <tbody>{proposal.budget_lines.map((b, i) => (
-                      <tr key={i} className="border-b border-slate-100"><td className="py-1.5">{b.item}</td><td>{b.qty} {b.unit}</td><td>{peso(b.unit_cost)}</td><td className="text-right font-semibold">{peso(b.qty * b.unit_cost)}</td></tr>
+                      <tr key={i} className="border-b border-slate-100"><td className="py-2">{b.item}</td><td>{b.qty} {b.unit}</td><td>{peso(b.unit_cost)}</td><td className="text-right font-semibold tabular-nums">{peso(b.qty * b.unit_cost)}</td></tr>
                     ))}</tbody>
+                    <tfoot><tr><td colSpan={3} className="pt-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Total</td><td className="pt-2 text-right font-bold tabular-nums text-ink">{peso(proposal.budget_lines.reduce((sum, b) => sum + b.qty * b.unit_cost, 0))}</td></tr></tfoot>
                   </table>
                 </div>
               )}
@@ -117,36 +118,59 @@ export default async function ProjectPage({
           </section>
         </div>
 
-        <aside className="space-y-6">
-          <section className="card space-y-3">
-            <h2 className="text-lg font-bold">Money</h2>
-            <p className="text-sm text-slate-600">Budget <b className="text-ink">{peso(p.budget)}</b></p>
+        <aside className="order-first min-w-0 space-y-6 lg:order-none">
+          <section className="card space-y-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Budget</p>
+              <p className="mt-1 font-display text-3xl font-bold leading-none text-ink tabular-nums">{peso(p.budget)}</p>
+            </div>
             <ProgressBar value={pct(p.spent, p.budget)} label={`${peso(p.spent)} spent`} />
+            {["scheduled", "ongoing", "completed"].includes(p.status) && <ProgressBar value={p.progress} label="Work done" />}
             {spendLines.length > 0 && (
-              <ul className="space-y-1 border-t border-slate-100 pt-3 text-sm">
-                {spendLines.map((s, i) => <li key={i} className="flex justify-between gap-2"><span className="text-slate-600">{s.description}{s.reference ? ` (${s.reference})` : ""}</span><span className="font-semibold">{peso(s.amount)}</span></li>)}
-              </ul>
+              <div className="border-t border-slate-100 pt-4">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Spending</p>
+                <ul className="space-y-2 text-sm">
+                  {spendLines.map((s, i) => (
+                    <li key={i} className="flex justify-between gap-3">
+                      <span className="min-w-0 text-slate-600">{s.description}{s.reference ? <span className="block text-xs text-slate-400">{s.reference}</span> : null}</span>
+                      <span className="shrink-0 font-semibold tabular-nums">{peso(s.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
-            {["scheduled", "ongoing", "completed"].includes(p.status) && <ProgressBar value={p.progress} label="Project progress" />}
+            <Link href="/funds" className="block border-t border-slate-100 pt-3 text-xs font-semibold text-flag-blue hover:underline">See the full ledger →</Link>
           </section>
 
           {["scheduled", "ongoing"].includes(p.status) && (
             <section className="card">
-              <h2 className="text-lg font-bold">Volunteers ({volunteers.length})</h2>
-              {volunteers.length > 0 && <p className="mt-2 text-sm text-slate-600">{volunteers.map((v) => v.name).join(", ")}</p>}
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="text-lg font-bold">Volunteers</h2>
+                <span className="text-sm font-semibold text-slate-500">{volunteers.length}</span>
+              </div>
+              {volunteers.length > 0 ? (
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {volunteers.map((v) => (
+                    <li key={v.user_id} className="flex items-center gap-2 rounded-full bg-mist py-1 pl-1 pr-3 text-xs font-medium text-ink ring-1 ring-inset ring-slate-200">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[10px] font-bold text-flag-blue ring-1 ring-slate-200">{initials(v.name)}</span>
+                      {v.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-2 text-sm text-slate-500">Be the first to help.</p>}
               {user ? (
-                <form action={toggleVolunteer} className="mt-3"><input type="hidden" name="project_id" value={p.id} />
-                  <SubmitButton className={joined ? "btn-outline" : "btn-yellow"}>{joined ? "Withdraw" : "I want to help"}</SubmitButton></form>
-              ) : <p className="mt-3 text-sm"><Link href="/login" className="font-semibold text-flag-blue">Log in</Link> to volunteer.</p>}
+                <form action={toggleVolunteer} className="mt-4"><input type="hidden" name="project_id" value={p.id} />
+                  <SubmitButton className={`${joined ? "btn-outline" : "btn-yellow"} w-full`}>{joined ? "Leave the volunteer list" : "I want to help"}</SubmitButton></form>
+              ) : <Link href="/login" className="btn-yellow mt-4 w-full">Log in to volunteer</Link>}
             </section>
           )}
 
           {isChair && p.status === "proposed" && funds && (
-            <section className="card space-y-3 border-flag-blue/40">
+            <section className="card space-y-3 border-flag-blue/30 ring-4 ring-flag-blue/5">
               <h2 className="text-lg font-bold">Chairperson: review</h2>
               <p className="text-sm text-slate-600">Available fund: <b>{peso(funds.available)}</b></p>
-              <form action={updateProposalBudget} className="flex gap-2"><input type="hidden" name="project_id" value={p.id} />
-                <input name="budget" defaultValue={p.budget} inputMode="decimal" className="input" aria-label="Budget" /><SubmitButton className="btn-outline">Set</SubmitButton></form>
+              <form action={updateProposalBudget} className="flex gap-2"><label htmlFor="proposal_budget" className="sr-only">Budget</label><input type="hidden" name="project_id" value={p.id} />
+                <input id="proposal_budget" name="budget" defaultValue={p.budget} inputMode="decimal" className="input" /><SubmitButton className="btn-outline">Set</SubmitButton></form>
               <form action={approveProject}><input type="hidden" name="project_id" value={p.id} /><SubmitButton className="btn-primary w-full">Approve and set aside budget</SubmitButton></form>
             </section>
           )}

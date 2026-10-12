@@ -1,4 +1,4 @@
-import { Flash } from "@/components/ui";
+import { Flash, PageHeader } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import PasswordInput from "@/components/PasswordInput";
 import { requireRole } from "@/lib/auth";
@@ -13,8 +13,7 @@ export default async function Account({ searchParams }: { searchParams: Promise<
   return (
     <div className="max-w-md space-y-6">
       <Flash sp={sp} />
-      <h1 className="text-2xl font-bold">Account</h1>
-      <p className="text-slate-600">{user.name} · {ROLE_LABEL[user.role]}</p>
+      <PageHeader eyebrow="Account" title="Your account" size="md">{user.name} · {ROLE_LABEL[user.role]}</PageHeader>
       <form action={changePassword} className="card space-y-3">
         <h2 className="text-lg font-bold">Change password</h2>
         <div><label className="label" htmlFor="current">Current password</label><PasswordInput id="current" name="current" required autoComplete="current-password" /></div>

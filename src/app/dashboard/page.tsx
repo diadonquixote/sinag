@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Badge, Empty, Flash } from "@/components/ui";
+import { Badge, Empty, Flash, PageHeader, SectionHeader } from "@/components/ui";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { IDEA_STATUS, ROLE_HOME } from "@/lib/roles";
@@ -20,13 +20,13 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-10">
       <Flash sp={sp} />
+      <PageHeader eyebrow="Kabataan desk" title="My activity" size="md" action={<Link href="/ideas/new" className="btn-red">Suggest a project</Link>}>
+        Track the ideas you sent, the polls you voted in, and the projects you volunteer for.
+      </PageHeader>
       <section>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">Your ideas</h1>
-          <Link href="/ideas/new" className="btn-red">Suggest a project</Link>
-        </div>
-        {ideas.length === 0 ? <div className="mt-4"><Empty>You have not suggested anything yet. What does our barangay need?</Empty></div> : (
-          <ul className="mt-4 space-y-3">
+        <SectionHeader as="h3" title="Your ideas" />
+        {ideas.length === 0 ? <Empty>You have not suggested anything yet. What does our barangay need?</Empty> : (
+          <ul className="space-y-3">
             {ideas.map((i) => {
               const st = IDEA_STATUS[i.status];
               return (
@@ -41,13 +41,39 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         )}
       </section>
       <section className="grid gap-8 md:grid-cols-2">
-        <div><h2 className="text-xl font-bold">Your votes</h2>
-          {votes.length === 0 ? <p className="mt-2 text-sm text-slate-500">No votes yet. <Link href="/ideas" className="font-semibold text-flag-blue">See open polls</Link>.</p> : (
-            <ul className="mt-3 space-y-2 text-sm">{votes.map((v, i) => <li key={i} className="card py-3"><b>{v.title}</b><br /><span className="text-slate-500">{v.poll} · {v.status === "open" ? "poll open" : "poll closed"}</span></li>)}</ul>)}
+        <div>
+          <SectionHeader as="h3" title="Your votes" />
+          {votes.length === 0 ? <Empty action={<Link href="/ideas" className="btn-outline btn-sm">See open polls</Link>}>No votes yet.</Empty> : (
+            <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {votes.map((v, i) => (
+                <li key={i} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-ink">{v.title}</span>
+                    <span className="block truncate text-xs text-slate-500">{v.poll}</span>
+                  </span>
+                  <Badge className={v.status === "open" ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-slate-100 text-slate-600 ring-slate-200"}>{v.status === "open" ? "Poll open" : "Closed"}</Badge>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <div><h2 className="text-xl font-bold">Projects you are helping</h2>
-          {helping.length === 0 ? <p className="mt-2 text-sm text-slate-500">You can volunteer from any scheduled project page.</p> : (
-            <ul className="mt-3 space-y-2 text-sm">{helping.map((h) => <li key={h.id} className="card py-3"><Link href={`/projects/${h.id}`} className="font-bold text-flag-blue">{h.title}</Link><br /><span className="text-slate-500">{h.start_date ? fmtDate(h.start_date) : "Date to be announced"}</span></li>)}</ul>)}
+        <div>
+          <SectionHeader as="h3" title="Projects you are helping" />
+          {helping.length === 0 ? <Empty action={<Link href="/projects" className="btn-outline btn-sm">Browse projects</Link>}>You can volunteer from any scheduled project page.</Empty> : (
+            <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {helping.map((h) => (
+                <li key={h.id}>
+                  <Link href={`/projects/${h.id}`} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-mist">
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-flag-blue">{h.title}</span>
+                      <span className="block text-xs text-slate-500">{h.start_date ? fmtDate(h.start_date) : "Date to be announced"}</span>
+                    </span>
+                    <span aria-hidden="true" className="text-slate-400">→</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
     </div>

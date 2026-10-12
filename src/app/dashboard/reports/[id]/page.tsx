@@ -15,11 +15,11 @@ export default async function ReportEditor({ params, searchParams }: { params: P
   if (!r || (user.role !== "chairperson" && r.author_id !== user.id)) notFound();
   return (
     <div className="space-y-6">
-      <Link href="/dashboard/treasurer" className="text-sm font-semibold text-flag-blue">← Finance desk</Link>
+      <Link href="/dashboard/treasurer" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>Finance desk</Link>
       <Flash sp={sp} />
-      <h1 className="text-2xl font-bold">{r.title} <span className="text-base font-normal text-slate-500">· {r.period}</span></h1>
+      <div><p className="eyebrow">Financial report</p><h1 className="mt-1.5 text-3xl font-bold leading-tight">{r.title}</h1><p className="mt-1 text-sm text-slate-500">{r.period}</p></div>
       <DocPanel kind="report" doc={r} user={user} />
-      <h2 className="pt-4 text-lg font-bold">Preview of what the public will see</h2>
+      <h2 className="pt-4 text-xl font-bold">Preview of what the public will see</h2>
       <ReportView content={r.content} data={r.data} />
     </div>
   );
