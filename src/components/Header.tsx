@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import PdynLogo from "./PdynLogo";
 import { getSession } from "@/lib/auth";
 import { ROLE_HOME, ROLE_LABEL } from "@/lib/roles";
 import { logout } from "@/actions/auth";
@@ -21,6 +22,7 @@ export default async function Header() {
       <div className="container-x flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Logo />
+          <span className="hidden border-l border-slate-300 pl-3 sm:block"><PdynLogo /></span>
           {org && <span className="hidden border-l border-slate-300 pl-3 text-xs font-medium text-slate-500 lg:block">{org}</span>}
         </div>
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
