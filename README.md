@@ -2,7 +2,7 @@
 
 **Sinag** means *a ray of light*. It is a transparency web app for Sangguniang Kabataan (SK) councils: kabataan suggest and vote on projects, the council funds and schedules them, and every set of minutes, financial report and project update is posted where the whole barangay can read it.
 
-Built for the Nebius x NVIDIA Global AI Hackathon (Best Apps & Agents). Colors: white with the Philippine flag's blue, red and yellow.
+Built by PDYN Technologies, from a first-hand problem: SK work that happens out of public view. Colors: white with the Philippine flag's blue, red and yellow.
 
 ## What it does
 
@@ -51,7 +51,7 @@ Without the AI variables the app still works: assistants fall back to simple tem
 3. Add the environment variables above in Project Settings.
 4. Deploy. AI pages allow up to 60 seconds. Photos are resized in the browser to stay under Vercel's 4.5 MB request limit.
 
-Vercel's Hobby plan is for non-commercial use, which fits a hackathon demo.
+Vercel's Hobby plan is for non-commercial use, so move to a paid plan if the app is used for real SK operations.
 
 ## Stack
 
