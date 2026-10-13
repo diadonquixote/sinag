@@ -54,28 +54,28 @@ jobs:
         run: npm ci || npm install --no-audit --no-fund
 
       - name: Lint
-        run: npm run lint
+        run: bash scripts/ci-step.sh Lint npm run lint
 
       - name: Create tables (twice, to prove setup is safe to re-run)
-        run: npm run db:setup && npm run db:setup
+        run: bash scripts/ci-step.sh "Database setup" sh -c 'npm run db:setup && npm run db:setup'
 
       - name: Unit and database tests
-        run: npm test
+        run: bash scripts/ci-step.sh Tests npm test
 
       - name: Build
-        run: npm run build
+        run: bash scripts/ci-step.sh Build npm run build
 
       - name: Type check
-        run: npm run typecheck
+        run: bash scripts/ci-step.sh "Type check" npm run typecheck
 
       - name: Load demo data for the browser tests
-        run: npm run db:seed
+        run: bash scripts/ci-step.sh "Demo data" npm run db:seed
 
       - name: Install the browser
         run: npx playwright install --with-deps chromium
 
       - name: End-to-end tests
-        run: npm run test:e2e
+        run: bash scripts/ci-step.sh "Browser tests" npm run test:e2e
 
       - name: Keep the report and screenshots
         if: always()
