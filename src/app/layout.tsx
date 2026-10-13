@@ -12,11 +12,15 @@ const display = Fraunces({ subsets: ["latin"], variable: "--font-display", displ
 
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLang();
+  const description = lang === "fil"
+    ? `Ang mga proyekto, iskedyul, katitikan at gastos ng ${ORG_NAME}, bukas para makita ng bawat kabataan.`
+    : `The projects, schedule, minutes and spending of the ${ORG_NAME}, open for every kabataan to see.`;
   return {
     title: { default: `Sinag — ${ORG_NAME}`, template: `%s · Sinag` },
-    description: lang === "fil"
-      ? `Ang mga proyekto, iskedyul, katitikan at gastos ng ${ORG_NAME}, bukas para makita ng bawat kabataan.`
-      : `The projects, schedule, minutes and spending of the ${ORG_NAME}, open for every kabataan to see.`,
+    description,
+    // How a shared link looks on Facebook and Messenger.
+    openGraph: { type: "website", siteName: "Sinag", title: `Sinag — ${ORG_NAME}`, description, locale: lang === "fil" ? "fil_PH" : "en_PH" },
+    twitter: { card: "summary", title: `Sinag — ${ORG_NAME}`, description },
   };
 }
 

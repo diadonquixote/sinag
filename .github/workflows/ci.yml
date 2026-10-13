@@ -82,6 +82,11 @@ jobs:
       - name: End-to-end tests
         run: bash scripts/ci-step.sh "Browser tests" npm run test:e2e
 
+      - name: Measure speed, accessibility and SEO (Lighthouse)
+        if: success() || failure()
+        continue-on-error: true
+        run: bash scripts/lighthouse.sh
+
       - name: Keep the report and screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -93,8 +98,8 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  # package.json gains dev tools from an environment that cannot reach the npm registry,
-  # so the lockfile is brought up to date here and committed back. Only on v1-next.
+  # Keeps package-lock.json in step with package.json on v1-next: if a dependency was
+  # added without the lockfile being regenerated, it is regenerated here and committed.
   lockfile:
     if: github.event_name == 'push' && github.ref == 'refs/heads/v1-next'
     runs-on: ubuntu-latest

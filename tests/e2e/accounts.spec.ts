@@ -13,14 +13,17 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
+  // Wait for the answer: either a desk, or back on /login with a message.
+  await page.waitForURL((url) => url.pathname !== "/login" || url.search.includes("err=") || url.search.includes("ok="));
 }
 
 test("an official asks for an account, is approved, and can be logged out everywhere", async ({ browser }, info) => {
   test.skip(info.project.name !== "desktop", "changes the database; run once");
   test.skip(!PASSWORD, "needs SEED_PASSWORD (the demo data)");
 
-  const email = `kagawad.${Date.now()}@test.ph`;
-  const name = "Rina Test Kagawad";
+  const stamp = Date.now();
+  const email = `kagawad.${stamp}@test.ph`;
+  const name = `Rina Test ${stamp}`;
   const first = await browser.newContext();
   const page = await first.newPage();
 
