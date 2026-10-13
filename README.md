@@ -4,8 +4,46 @@
 councils: the council records what it is doing and what it spends, and the whole barangay can
 read it without an account.
 
-Built by PDYN Technologies, from a first-hand problem: SK work that happens out of public view.
-Colors: white with the Philippine flag's blue, red and yellow.
+## Why I built this
+
+I served as secretary of our Sangguniang Kabataan. That is where I learned how easily public
+money becomes invisible.
+
+Not through anything dramatic. Through minutes that stay in a notebook. Through a financial
+report read aloud once at an assembly and never posted anywhere. Through a budget that exists,
+is spent, and is never seen by a single one of the young people it belongs to. By the time
+anyone thinks to ask where the funds went, the records are scattered, the term is ending, and
+the honest answer is that nobody really knows.
+
+The law is not the problem. RA 10742 already requires the SK to practise full public disclosure
+of its transactions and documents. The problem is that there is nowhere for that disclosure to
+go, and no habit of putting it there. A bulletin board in one barangay hall, read by whoever
+happens to walk past.
+
+So Sinag is not a record-keeping tool for councils. It is a record *for the public*, that the
+council happens to keep. Every peso in the ledger is attached to a receipt. Nothing is published
+without the Chairperson approving it, and nothing approved can quietly disappear afterwards —
+entries are voided on the record, never deleted. Every number on the site is computed from the
+ledger in code, so no one can type in a total that the entries do not support.
+
+I built it because I wanted it to exist when I was the one keeping those records.
+
+## Where this is going
+
+It starts in one barangay, which is mine. That is deliberate: a transparency tool that has never
+survived contact with a real council, a real budget and a real audit is not worth much.
+
+But nothing in the idea is local. Every youth council, student government, cooperative and small
+public body has the same shape of problem — a small budget, a few officers, real obligations to
+disclose, and no practical way to do it. What is specific to the Philippines here is the law it
+is built around and the language it speaks. The rest is not.
+
+So the aim is wider than my barangay, and the path to it is unglamorous: make it work completely
+in one place, for one council, with real money and real scrutiny. Then the next.
+
+This is not a portfolio piece. It is meant to be used.
+
+— Kristina Diane Aviles, built under PDYN Technologies
 
 ## What v1 is, and why
 
