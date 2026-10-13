@@ -8,7 +8,7 @@ import { DOC_STATUS } from "@/lib/roles";
 import { fmtDate, peso, todayManila } from "@/lib/format";
 import { addReceipts, addTransaction, createReport, removeReceipt, setFund, voidTransaction } from "@/actions/finance";
 import ReceiptInput from "@/components/ReceiptInput";
-import { aiConfigured } from "@/lib/ai";
+import { visionConfigured } from "@/lib/ai";
 
 export const metadata = { title: "Finance assistant" };
 export const maxDuration = 60;
@@ -19,7 +19,7 @@ export default async function TreasurerDesk({ searchParams }: { searchParams: Pr
   const user = await requireRole("treasurer", "chairperson");
   const sp = await searchParams;
   const isTreasurer = user.role === "treasurer";
-  const canRead = aiConfigured() && !!process.env.NEBIUS_VISION_MODEL;
+  const canRead = visionConfigured();
   const today = todayManila();
   const monthStart = `${today.slice(0, 7)}-01`;
   const [f, ledger, projects, reports] = await Promise.all([

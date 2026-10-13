@@ -41,13 +41,27 @@ Demo accounts (after seeding; password is your `SEED_PASSWORD`): `chair@sinag.de
 | `DATABASE_URL` | yes | Any Postgres. Use the *pooled* URL on Vercel (Neon or Supabase both work) |
 | `AUTH_SECRET` | yes | 16+ random characters: `openssl rand -base64 32` |
 | `NEXT_PUBLIC_ORG_NAME` | no | Shown in the header, e.g. "SK ng Barangay San Isidro" |
-| `NEBIUS_API_KEY` | for AI | Nebius Token Factory key |
-| `NEBIUS_BASE_URL` | for AI | Default `https://api.tokenfactory.nebius.com/v1` |
-| `NEBIUS_MODEL` | for AI | A Nemotron model ID from your Nebius console |
-| `NEBIUS_VISION_MODEL` | optional | Vision model for photos of handwritten notes |
+| `GEMINI_API_KEY` | for AI | Free key from [Google AI Studio](https://aistudio.google.com/apikey). Reads photos too |
+| `GROQ_API_KEY` | optional | Free [Groq](https://console.groq.com/keys) key. Text only — it cannot read photos |
+| `AI_PROVIDER` | optional | `gemini`, `groq` or `nebius`. Blank means "whichever key is filled in" |
+| `AI_MODEL` / `AI_VISION_MODEL` | optional | Override the built-in model IDs if one changes |
+| `AI_BASE_URL` / `AI_API_KEY` | optional | Point at any other OpenAI-compatible provider |
 | `SEED_PASSWORD` | demo only | Password for seeded demo accounts |
 
-Without the AI variables the app still works: assistants fall back to simple template drafts and say so.
+### Turning on the AI assistants (free)
+
+1. Open [aistudio.google.com/apikey](https://aistudio.google.com/apikey), sign in with Google and create an API key.
+2. Put it in `.env.local` as `GEMINI_API_KEY=...` and restart `npm run dev`.
+
+That is the whole setup — the model IDs are built in. Free tiers have daily limits, so if
+one is reached the assistants say "the free AI limit has been reached" and fall back to
+template drafts. Nothing is lost: photos and receipts are saved either way.
+
+Without any AI key the app still works: assistants fall back to simple template drafts and say so.
+
+Free tiers may use what you send to improve the provider's products. Minutes and receipts can
+contain real names and amounts, so read the provider's terms before putting real council
+records through them.
 
 ## Deploy to Vercel
 

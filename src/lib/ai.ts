@@ -2,18 +2,89 @@ import { peso } from "./format";
 import type { MinutesData, Proposal, ReportData } from "./types";
 
 /**
- * AI assistants, powered by Nebius Token Factory (OpenAI-compatible) with an NVIDIA Nemotron model.
+ * AI assistants. Any OpenAI-compatible provider works; Sinag ships presets for the free ones.
  *
  * Rules every assistant follows here:
  *  - AI only drafts. A human reviews, and the chairperson approves before anything is public.
  *  - Money is never calculated by the model. Totals are computed in code; the model only writes words.
  *  - If the AI is not configured or fails, we fall back to a plain template so the app keeps working.
+ *
+ * Set AI_PROVIDER, or just drop in one key and Sinag picks the provider for you.
  */
 
-const BASE = (process.env.NEBIUS_BASE_URL || "https://api.tokenfactory.nebius.com/v1").replace(/\/$/, "");
+type Preset = {
+  label: string;
+  base: string;
+  keyEnv: string;
+  model: string;
+  /** null when the provider has no vision model we can rely on. Photos are then saved, not read. */
+  vision: string | null;
+};
+
+const PRESETS: Record<string, Preset> = {
+  // Free tier, no card required at the time of writing. Every Gemini model reads images.
+  gemini: {
+    label: "Google AI Studio",
+    base: "https://generativelanguage.googleapis.com/v1beta/openai",
+    keyEnv: "GEMINI_API_KEY",
+    model: "gemini-3.8-flash",
+    vision: "gemini-3.8-flash",
+  },
+  // Free tier, fast, text only. Good as a backup when Gemini's daily limit runs out.
+  groq: {
+    label: "Groq",
+    base: "https://api.groq.com/openai/v1",
+    keyEnv: "GROQ_API_KEY",
+    model: "llama-3.3-70b-versatile",
+    vision: null,
+  },
+  // Paid. Kept so an existing Nebius setup keeps working.
+  nebius: {
+    label: "Nebius Token Factory",
+    base: "https://api.tokenfactory.nebius.com/v1",
+    keyEnv: "NEBIUS_API_KEY",
+    model: "",
+    vision: null,
+  },
+};
+
+const env = (name: string): string => (process.env[name] || "").trim();
+
+/** Works out which provider to talk to, and with which models. */
+function provider(): { label: string; base: string; key: string; model: string; vision: string | null } {
+  const chosen = env("AI_PROVIDER").toLowerCase();
+  const name =
+    (chosen && PRESETS[chosen] ? chosen : "") ||
+    (env("GEMINI_API_KEY") && "gemini") ||
+    (env("GROQ_API_KEY") && "groq") ||
+    (env("NEBIUS_API_KEY") && "nebius") ||
+    "gemini";
+
+  const preset = PRESETS[name];
+  // An explicit AI_* value always wins, so a changed model ID never needs a code change.
+  return {
+    label: preset.label,
+    base: (env("AI_BASE_URL") || env("NEBIUS_BASE_URL") || preset.base).replace(/\/$/, ""),
+    key: env("AI_API_KEY") || env(preset.keyEnv),
+    model: env("AI_MODEL") || env("NEBIUS_MODEL") || preset.model,
+    vision: env("AI_VISION_MODEL") || env("NEBIUS_VISION_MODEL") || preset.vision,
+  };
+}
 
 export function aiConfigured(): boolean {
-  return Boolean(process.env.NEBIUS_API_KEY && process.env.NEBIUS_MODEL);
+  const p = provider();
+  return Boolean(p.key && p.model);
+}
+
+/** True when photos of notes and receipts can actually be read. */
+export function visionConfigured(): boolean {
+  const p = provider();
+  return Boolean(p.key && p.vision);
+}
+
+/** For the setup notices on the desks. */
+export function aiProviderLabel(): string {
+  return provider().label;
 }
 
 type Message = {
@@ -37,18 +108,23 @@ function stripThinking(text: string): string {
   return out.trim();
 }
 
-async function chat(
+/** Why a call came back empty, so the desks can explain it instead of just failing. */
+export type AiFailure = "not_configured" | "busy" | "failed";
+
+type ChatOpts = { json?: boolean; model?: string; maxTokens?: number };
+
+async function chatDetailed(
   messages: Message[],
-  opts: { json?: boolean; model?: string; maxTokens?: number } = {},
-): Promise<string | null> {
-  const key = process.env.NEBIUS_API_KEY;
-  const model = opts.model || process.env.NEBIUS_MODEL;
-  if (!key || !model) return null;
+  opts: ChatOpts = {},
+): Promise<{ text: string | null; failure?: AiFailure }> {
+  const p = provider();
+  const model = opts.model || p.model;
+  if (!p.key || !model) return { text: null, failure: "not_configured" };
 
   const attempt = async (jsonMode: boolean): Promise<string | null> => {
-    const res = await fetch(`${BASE}/chat/completions`, {
+    const res = await fetch(`${p.base}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.key}` },
       body: JSON.stringify({
         model,
         messages,
@@ -66,20 +142,30 @@ async function chat(
   };
 
   try {
-    return await attempt(Boolean(opts.json));
+    return { text: await attempt(Boolean(opts.json)) };
   } catch (err) {
     // Some models reject response_format; retry once without it. Never retry timeouts.
     if (opts.json && err instanceof AiHttpError && (err.status === 400 || err.status === 422)) {
       try {
-        return await attempt(false);
+        return { text: await attempt(false) };
       } catch (err2) {
         console.error(err2 instanceof Error ? err2.message : err2);
-        return null;
+        return { text: null, failure: failureOf(err2) };
       }
     }
     console.error(err instanceof Error ? err.message : err);
-    return null;
+    return { text: null, failure: failureOf(err) };
   }
+}
+
+/** Free tiers push back with 429 (and sometimes 503) once the quota for the minute or day is used up. */
+function failureOf(err: unknown): AiFailure {
+  if (err instanceof AiHttpError && (err.status === 429 || err.status === 503)) return "busy";
+  return "failed";
+}
+
+async function chat(messages: Message[], opts: ChatOpts = {}): Promise<string | null> {
+  return (await chatDetailed(messages, opts)).text;
 }
 
 // ----------------------------------------------------------------- small helpers
@@ -482,11 +568,16 @@ export async function transcribeImage(dataUrl: string): Promise<{ text?: string;
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(dataUrl)) return { error: "That file type is not supported. Use a JPG or PNG photo." };
   if (dataUrl.length > 3_500_000) return { error: "The photo is too large. Try a smaller one." };
 
-  const model = process.env.NEBIUS_VISION_MODEL;
-  if (!process.env.NEBIUS_API_KEY || !model) {
-    return { error: "Photo reading is not set up yet. Add NEBIUS_VISION_MODEL, or type the notes in." };
+  const p = provider();
+  if (!p.key || !p.vision) {
+    return {
+      error: p.key
+        ? `${p.label} cannot read photos. The photo is saved with the minutes — type the notes in, or switch AI_PROVIDER to one that reads images.`
+        : "Photo reading is not set up yet. Add an AI key, or type the notes in.",
+    };
   }
-  const reply = await chat(
+  const model = p.vision;
+  const reply = await chatDetailed(
     [
       {
         role: "user",
@@ -503,8 +594,15 @@ export async function transcribeImage(dataUrl: string): Promise<{ text?: string;
     ],
     { model, maxTokens: 2500 },
   );
-  if (!reply) return { error: "Could not read the photo. Try a clearer picture, or type the notes in." };
-  return { text: reply };
+  if (!reply.text) {
+    return {
+      error:
+        reply.failure === "busy"
+          ? "The free AI limit has been reached for now. Wait a minute and try again — the photo is already saved."
+          : "Could not read the photo. Try a clearer picture, or type the notes in.",
+    };
+  }
+  return { text: reply.text };
 }
 
 // ----------------------------------------------------------------- receipts
@@ -518,10 +616,16 @@ export type ReceiptReading = { amount?: number; date?: string; reference?: strin
 export async function readReceipt(dataUrl: string): Promise<{ reading?: ReceiptReading; error?: string }> {
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(dataUrl)) return { error: "Use a JPG or PNG photo." };
   if (dataUrl.length > 3_500_000) return { error: "The photo is too large." };
-  const model = process.env.NEBIUS_VISION_MODEL;
-  if (!process.env.NEBIUS_API_KEY || !model) return { error: "Receipt reading is not set up yet." };
-
-  const reply = await chat(
+  const p = provider();
+  if (!p.key || !p.vision) {
+    return {
+      error: p.key
+        ? `${p.label} cannot read photos. The receipt is still attached to the entry — type the details in.`
+        : "Receipt reading is not set up yet. Add an AI key, or type the details in.",
+    };
+  }
+  const model = p.vision;
+  const reply = await chatDetailed(
     [
       {
         role: "user",
@@ -540,8 +644,15 @@ export async function readReceipt(dataUrl: string): Promise<{ reading?: ReceiptR
     ],
     { model, json: true, maxTokens: 600 },
   );
-  const raw = parseJson(reply);
-  if (!raw) return { error: "Could not read this receipt. Type the details in." };
+  const raw = parseJson(reply.text);
+  if (!raw) {
+    return {
+      error:
+        reply.failure === "busy"
+          ? "The free AI limit has been reached for now. Wait a minute and try again — the receipt is already attached."
+          : "Could not read this receipt. Type the details in.",
+    };
+  }
 
   const reading: ReceiptReading = {};
   const total = Number(String(raw.total ?? "").replace(/[^\d.]/g, ""));

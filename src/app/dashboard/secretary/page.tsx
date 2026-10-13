@@ -4,7 +4,7 @@ import SubmitButton from "@/components/SubmitButton";
 import NotesInput from "@/components/NotesInput";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
-import { aiConfigured } from "@/lib/ai";
+import { aiConfigured, aiProviderLabel, visionConfigured } from "@/lib/ai";
 import { DOC_STATUS } from "@/lib/roles";
 import { fmtDate, todayManila } from "@/lib/format";
 import { createMinutes } from "@/actions/documents";
@@ -18,14 +18,14 @@ export default async function SecretaryDesk({ searchParams }: { searchParams: Pr
   const rows = user.role === "chairperson"
     ? await sql<Row[]>`select m.id, m.title, m.status, m.session_date::text as session_date, u.name as author, (select count(*)::int from minutes_photos p where p.minutes_id = m.id) as photos from minutes m join users u on u.id = m.author_id order by m.session_date desc, m.id desc`
     : await sql<Row[]>`select m.id, m.title, m.status, m.session_date::text as session_date, u.name as author, (select count(*)::int from minutes_photos p where p.minutes_id = m.id) as photos from minutes m join users u on u.id = m.author_id where m.author_id = ${user.id} order by m.session_date desc, m.id desc`;
-  const canScan = aiConfigured() && !!process.env.NEBIUS_VISION_MODEL;
+  const canScan = visionConfigured();
   return (
     <div className="space-y-10">
       <Flash sp={sp} />
       <section>
         <PageHeader eyebrow="Secretary desk" title="Minutes assistant" size="md">Upload photos of your handwritten notes or type them in. Sinag turns them into clear minutes with attendance, decisions, action items and draft resolutions. You check it, then the Chairperson approves it before it goes public.</PageHeader>
-        {!aiConfigured() ? <Notice>AI is not connected yet, so drafts will be simple and photos are not read automatically. Add NEBIUS_API_KEY (and NEBIUS_VISION_MODEL for photos) to turn on the full assistant.</Notice>
-          : !canScan && <Notice>Photos are saved but not read automatically. Add NEBIUS_VISION_MODEL to let Sinag read handwriting.</Notice>}
+        {!aiConfigured() ? <Notice>AI is not connected yet, so drafts will be simple and photos are not read automatically. Add a free GEMINI_API_KEY to turn on the full assistant.</Notice>
+          : !canScan && <Notice>{aiProviderLabel()} cannot read photos, so they are saved with the minutes but not transcribed. Switch AI_PROVIDER to one that reads images to turn this on.</Notice>}
         <form action={createMinutes} className="card space-y-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div><label className="label" htmlFor="title">Meeting title</label><input id="title" name="title" required defaultValue="Regular Session" className="input" /></div>

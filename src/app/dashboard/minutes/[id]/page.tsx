@@ -9,7 +9,7 @@ import { requireRole } from "@/lib/auth";
 import { fmtDate, peso } from "@/lib/format";
 import type { MinutesData } from "@/lib/types";
 import { regenerateMinutes } from "@/actions/documents";
-import { aiConfigured } from "@/lib/ai";
+import { visionConfigured } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -22,7 +22,7 @@ export default async function MinutesEditor({ params, searchParams }: { params: 
   if (!m || (user.role !== "chairperson" && m.author_id !== user.id)) notFound();
   const data = m.data as MinutesData | null;
   const photos = await sql<Row[]>`select id, page from minutes_photos where minutes_id = ${m.id} order by page`;
-  const canScan = aiConfigured() && !!process.env.NEBIUS_VISION_MODEL;
+  const canScan = visionConfigured();
 
   return (
     <div className="space-y-6">
