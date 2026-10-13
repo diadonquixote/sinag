@@ -4,24 +4,28 @@ import Avatar from "@/components/Avatar";
 import { Badge, ProgressBar } from "@/components/ui";
 import { sql, type Row } from "@/lib/db";
 import { categoryStyle, PROJECT_STATUS, ROLE_LABEL, type Role } from "@/lib/roles";
-import { fmtDate, fmtDateRange, timeAgo } from "@/lib/format";
+import { fmtDate, fmtDateRange } from "@/lib/format";
+import { getT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/messages";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
-  if (!Number.isInteger(id)) return { title: "SK council" };
-  const [u] = await sql<Row[]>`select name from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'`;
-  return { title: u ? `${u.name} · SK council` : "SK council" };
+  const { t } = await getT();
+  if (!Number.isInteger(id)) return { title: t("council.title") };
+  const [u] = await sql<Row[]>`select name from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status in ('active', 'former')`;
+  return { title: u ? `${u.name} · ${t("council.title")}` : t("council.title") };
 }
 
 /** Public profile of an SK official: credentials, contributions they wrote, and what Sinag has on record. */
 export default async function OfficialProfile({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) notFound();
+  const { t } = await getT();
 
   const [p] = await sql<Row[]>`
-    select id, name, role, committee, bio, term, credentials, contributions,
+    select id, name, role, status, committee, bio, term, credentials, contributions,
            extract(epoch from avatar_updated_at)::bigint::text as avatar_v
-    from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'`;
+    from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status in ('active', 'former')`;
   if (!p) notFound();
 
   const [projects, [counts], activity, council] = await Promise.all([
@@ -58,21 +62,21 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
   const contributions = lines(p.contributions);
   const record: [string, number][] = (
     [
-      ["Projects led", projects.length],
-      ["Project updates posted", counts.updates],
-      ["Minutes published", counts.minutes],
-      ["Financial reports published", counts.reports],
-      ["Ledger entries recorded", counts.entries],
-      ["Documents approved", counts.approved_docs],
-      ["Projects funded", counts.funded],
-      ["Projects started", counts.started],
+      [t("council.r.projects"), projects.length],
+      [t("council.r.updates"), counts.updates],
+      [t("council.r.minutes"), counts.minutes],
+      [t("council.r.reports"), counts.reports],
+      [t("council.r.entries"), counts.entries],
+      [t("council.r.approved"), counts.approved_docs],
+      [t("council.r.funded"), counts.funded],
+      [t("council.r.started"), counts.started],
     ] as [string, number][]
   ).filter(([, n]) => n > 0);
 
   return (
     <div className="container-x py-10 sm:py-12">
       <Link href="/council" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue">
-        <span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>SK council
+        <span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>{t("council.back")}
       </Link>
 
       {/* ---------------------------------------------------------------- who */}
@@ -82,11 +86,11 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
             <Avatar id={p.id} name={p.name} v={p.avatar_v} size="xl" className="-mt-14 !h-28 !w-28 text-3xl ring-4 ring-white shadow-md" />
             <div className="min-w-0 sm:pt-5">
-              <p className="eyebrow">{ROLE_LABEL[p.role as Role]}</p>
+              <p className="eyebrow">{p.status === "former" ? t("council.formerRole", { role: ROLE_LABEL[p.role as Role] }) : ROLE_LABEL[p.role as Role]}</p>
               <h1 className="mt-1 text-3xl font-bold leading-tight sm:text-4xl">{p.name}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                 {p.committee && <span className="rounded-full bg-mist px-3 py-1 text-xs font-semibold text-flag-blue ring-1 ring-inset ring-slate-200">{p.committee}</span>}
-                {p.term && <span>Term {p.term}</span>}
+                {p.term && <span>{t("council.term", { term: p.term })}</span>}
               </div>
             </div>
           </div>
@@ -98,9 +102,9 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
         <div className="min-w-0 space-y-6 lg:col-span-2">
           {/* ---------------------------------------------------------------- credentials */}
           <section className="card sm:p-6" aria-labelledby="cred-h">
-            <h2 id="cred-h" className="text-xl font-bold">Credentials</h2>
+            <h2 id="cred-h" className="text-xl font-bold">{t("council.credentials")}</h2>
             {credentials.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">{p.name.split(" ")[0]} has not posted credentials yet.</p>
+              <p className="mt-2 text-sm text-slate-500">{t("council.noCredentials", { name: p.name.split(" ")[0] })}</p>
             ) : (
               <ul className="mt-4 space-y-3">
                 {credentials.map((c, i) => (
@@ -115,9 +119,9 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
 
           {/* ---------------------------------------------------------------- contributions */}
           <section className="card sm:p-6" aria-labelledby="contrib-h">
-            <h2 id="contrib-h" className="text-xl font-bold">Contributions to the council</h2>
+            <h2 id="contrib-h" className="text-xl font-bold">{t("council.contributions")}</h2>
             {contributions.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">No contributions written yet. The record on the right is kept by Sinag automatically.</p>
+              <p className="mt-2 text-sm text-slate-500">{t("council.noContributions")}</p>
             ) : (
               <ol className="mt-4 space-y-3">
                 {contributions.map((c, i) => (
@@ -132,15 +136,15 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
 
           {/* ---------------------------------------------------------------- recent activity */}
           <section className="card sm:p-6" aria-labelledby="act-h">
-            <h2 id="act-h" className="text-xl font-bold">Recent public activity</h2>
+            <h2 id="act-h" className="text-xl font-bold">{t("council.activity")}</h2>
             {activity.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">Nothing posted yet.</p>
+              <p className="mt-2 text-sm text-slate-500">{t("council.noActivity")}</p>
             ) : (
               <ol className="mt-4 space-y-4 border-l-2 border-flag-yellow pl-4">
                 {activity.map((a, i) => (
                   <li key={i}>
                     <p className="text-xs text-slate-500">
-                      {a.kind === "update" ? "Posted an update" : a.kind === "minutes" ? "Published minutes" : "Published a financial report"} · {timeAgo(a.at)}
+                      {t(`council.a.${a.kind === "update" ? "update" : a.kind === "minutes" ? "minutes" : "report"}` as MessageKey)} · {fmtDate(a.at)}
                     </p>
                     <Link
                       href={a.kind === "update" ? `/projects/${a.project_id}` : a.kind === "minutes" ? `/feed/minutes/${a.doc_id}` : `/feed/reports/${a.doc_id}`}
@@ -159,10 +163,10 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
         <aside className="min-w-0 space-y-6">
           {/* ---------------------------------------------------------------- on record */}
           <section className="card" aria-labelledby="rec-h">
-            <h2 id="rec-h" className="text-lg font-bold">On record in Sinag</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Counted automatically from the public record.</p>
+            <h2 id="rec-h" className="text-lg font-bold">{t("council.record")}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{t("council.recordLead")}</p>
             {record.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-500">No activity recorded yet.</p>
+              <p className="mt-3 text-sm text-slate-500">{t("council.noRecord")}</p>
             ) : (
               <dl className="mt-4 grid grid-cols-2 gap-3">
                 {record.map(([label, n]) => (
@@ -177,23 +181,24 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
 
           {/* ---------------------------------------------------------------- projects */}
           <section className="card" aria-labelledby="proj-h">
-            <h2 id="proj-h" className="text-lg font-bold">Point person for</h2>
+            <h2 id="proj-h" className="text-lg font-bold">{t("council.projectsLed")}</h2>
             {projects.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">No projects assigned yet.</p>
+              <p className="mt-2 text-sm text-slate-500">{t("council.noProjects")}</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {projects.map((pr) => {
-                  const st = PROJECT_STATUS[pr.status] ?? PROJECT_STATUS.proposed;
+                  const statusKey = PROJECT_STATUS[pr.status] ? (pr.status as string) : "proposed";
+                  const st = PROJECT_STATUS[statusKey];
                   return (
                     <li key={pr.id}>
                       <Link href={`/projects/${pr.id}`} className="block rounded-xl border border-slate-200 p-3 transition hover:border-flag-blue/40 hover:bg-mist/50">
                         <span className="flex flex-wrap items-center gap-1.5">
-                          <Badge className={st.className}>{st.label}</Badge>
+                          <Badge className={st.className}>{t(`status.${statusKey}` as MessageKey)}</Badge>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${categoryStyle(pr.category).chip}`}>{pr.category}</span>
                         </span>
                         <span className="mt-1.5 block font-semibold leading-snug text-ink">{pr.title}</span>
                         <span className="block text-xs text-slate-500">{fmtDateRange(pr.start_date, pr.end_date)}</span>
-                        <span className="mt-2 block"><ProgressBar value={Number(pr.progress ?? 0)} label="Work done" /></span>
+                        <span className="mt-2 block"><ProgressBar value={Number(pr.progress ?? 0)} label={t("project.workDone")} /></span>
                       </Link>
                     </li>
                   );
@@ -207,7 +212,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
       {/* ---------------------------------------------------------------- rest of the council */}
       {council.length > 0 && (
         <section className="mt-12 border-t border-slate-200 pt-8" aria-labelledby="others-h">
-          <h2 id="others-h" className="text-lg font-bold">Others on the council</h2>
+          <h2 id="others-h" className="text-lg font-bold">{t("council.others")}</h2>
           <ul className="mt-4 flex flex-wrap gap-3">
             {council.map((c) => (
               <li key={c.id}>
@@ -221,7 +226,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
           </ul>
         </section>
       )}
-      <p className="mt-8 text-xs text-slate-400">Profile details are written by {p.name.split(" ")[0]}. Counts are taken from Sinag records as of {fmtDate(new Date())}.</p>
+      <p className="mt-8 text-xs text-slate-500">{t("council.footnote", { name: p.name.split(" ")[0], date: fmtDate(new Date()) })}</p>
     </div>
   );
 }

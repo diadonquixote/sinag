@@ -8,7 +8,13 @@ export async function getStats() {
       (select count(*) from projects where status = 'completed')::int as completed,
       (select count(*) from minutes where status = 'published')::int
         + (select count(*) from reports where status = 'published')::int as records,
-      (select coalesce(sum(amount), 0) from transactions where kind = 'expense' and voided_at is null)::float8 as spent
+      (select coalesce(sum(amount), 0) from transactions where kind = 'expense' and voided_at is null)::text as spent,
+      greatest(
+        (select max(published_at) from minutes where status = 'published'),
+        (select max(published_at) from reports where status = 'published'),
+        (select max(created_at) from project_updates),
+        (select max(created_at) from transactions)
+      ) as last_update
   `;
   return row;
 }

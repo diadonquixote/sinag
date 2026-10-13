@@ -87,4 +87,6 @@ export const ACCOUNT_STATUS: Record<string, { label: string; className: string }
   pending: { label: "Waiting for approval", className: "bg-yellow-50 text-yellow-800 ring-yellow-200" },
   active: { label: "Active", className: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
   disabled: { label: "Turned off", className: "bg-slate-100 text-slate-700 ring-slate-200" },
+  former: { label: "Term ended", className: "bg-blue-50 text-flag-blue ring-blue-200" },
+  removed: { label: "Removed", className: "bg-slate-100 text-slate-500 ring-slate-200" },
 };

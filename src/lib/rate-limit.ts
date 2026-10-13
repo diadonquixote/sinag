@@ -31,10 +31,10 @@ function minutesLeft(oldest: Date): number {
 }
 
 /**
- * Returns a message to show the person when they have been locked out, or null to let them try.
- * Called before the password is checked, so a locked account costs no work.
+ * Returns how many minutes the person must wait when they have been locked out, or null to let
+ * them try. Called before the password is checked, so a locked account costs no work.
  */
-export async function loginBlockedMessage(email: string, address: string): Promise<string | null> {
+export async function loginBlockedMinutes(email: string, address: string): Promise<number | null> {
   const scopes = [`email:${email}`, address ? `ip:${address}` : ""].filter(Boolean);
   if (!scopes.length) return null;
 
@@ -49,8 +49,7 @@ export async function loginBlockedMessage(email: string, address: string): Promi
     const scope = row.scope as string;
     const limit = scope.startsWith("email:") ? MAX_PER_EMAIL : MAX_PER_ADDRESS;
     if (Number(row.tries) >= limit) {
-      const wait = minutesLeft(new Date(row.oldest as string | Date));
-      return `Too many failed sign-in attempts. Please wait about ${wait} minute${wait === 1 ? "" : "s"} and try again. If you have forgotten your password, ask the site admin to reset it.`;
+      return minutesLeft(new Date(row.oldest as string | Date));
     }
   }
   return null;

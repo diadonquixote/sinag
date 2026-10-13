@@ -1,3 +1,4 @@
+import { imageResponse } from "@/lib/image-response";
 import { sql, type Row } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { isOfficial } from "@/lib/roles";
@@ -13,11 +14,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const viewer = await currentUser();
     if (!viewer || !isOfficial(viewer.role)) return new Response("Not found", { status: 404 });
   }
-  return new Response(new Uint8Array(row.data as Buffer), {
-    headers: {
-      "Content-Type": (row.type as string) || "image/jpeg",
-      "Cache-Control": row.is_public ? "public, max-age=86400" : "private, no-store",
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
+  return imageResponse(row.data as Buffer, row.type as string, row.is_public ? "public, max-age=86400" : "private, no-store");
 }

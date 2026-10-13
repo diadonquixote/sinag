@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth";
+import { acceptPrivacy } from "@/actions/auth";
+import { PRIVACY_VERSION } from "@/lib/privacy";
 import { sql, type Row } from "@/lib/db";
 import { isOfficial, ROLE_LABEL, type Role } from "@/lib/roles";
 import Avatar from "@/components/Avatar";
@@ -21,7 +24,7 @@ const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireRole();
-  const [me] = await sql<Row[]>`select committee, bio, purok from users where id = ${user.id}`;
+  const [me] = await sql<Row[]>`select committee, bio, purok, privacy_version from users where id = ${user.id}`;
   const tabs = [...NAV[user.role], { href: "/dashboard/profile", label: "Profile" }];
   // Minutes and report pages belong to the Minutes / Finance tabs.
   const withDocs = tabs.map((t) =>
@@ -46,6 +49,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
       </div>
+      {me?.privacy_version !== PRIVACY_VERSION && (
+        <div className="border-b border-yellow-200 bg-yellow-50">
+          <form action={acceptPrivacy} className="container-x flex flex-wrap items-center justify-between gap-3 py-3 text-sm text-yellow-900">
+            <p>Please read the <Link href="/privacy" className="font-semibold underline">privacy notice</Link>. It explains what Sinag publishes about you as an official and what it keeps private.</p>
+            <button className="btn-outline bg-white py-1.5 text-sm">I have read it</button>
+          </form>
+        </div>
+      )}
       {missing.length > 0 && <ProfileNudge missing={missing} />}
       <div className="container-x py-8 sm:py-10">{children}</div>
     </>

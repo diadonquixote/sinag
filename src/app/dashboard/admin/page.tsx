@@ -3,9 +3,10 @@ import { Badge, Empty, Flash, PageHeader } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
-import { ACCOUNT_STATUS, ASSIGNABLE_ROLES, ROLE_LABEL, type Role } from "@/lib/roles";
+import { ACCOUNT_STATUS, ASSIGNABLE_ROLES, isOfficial, ROLE_LABEL, type Role } from "@/lib/roles";
 import { timeAgo } from "@/lib/format";
-import { approveAccount, changeRole, createAccount, rejectAccount, resetPassword, setAccountActive } from "@/actions/accounts";
+import { approveAccount, changeRole, createAccount, markTermEnded, rejectAccount, removeAccount, resetPassword, setAccountActive } from "@/actions/accounts";
+import { PENDING_REQUEST_DAYS } from "@/lib/privacy";
 
 export const metadata = { title: "Accounts" };
 
@@ -21,12 +22,14 @@ function RoleSelect({ id, value }: { id: string; value: string }) {
 export default async function AdminDesk({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const me = await requireRole("admin");
   const sp = await searchParams;
+  // Requests nobody answered are not kept forever (see the privacy notice).
+  await sql`delete from users where status = 'pending' and created_at < now() - make_interval(days => ${PENDING_REQUEST_DAYS})`;
   const [pending, accounts] = await Promise.all([
     sql<Row[]>`select id, name, email, role, request_note, created_at from users where status = 'pending' order by created_at`,
     sql<Row[]>`
       select id, name, email, role, status from users
-      where status in ('active', 'disabled') and role <> 'kabataan'
-      order by status, case role when 'admin' then 0 when 'chairperson' then 1 when 'secretary' then 2 when 'treasurer' then 3 else 4 end, name`,
+      where status in ('active', 'disabled', 'former') and role <> 'kabataan'
+      order by case status when 'active' then 0 when 'disabled' then 1 else 2 end, case role when 'admin' then 0 when 'chairperson' then 1 when 'secretary' then 2 when 'treasurer' then 3 else 4 end, name`,
   ]);
 
   return (
@@ -34,7 +37,7 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
       <Flash sp={sp} />
       <section>
         <PageHeader eyebrow="Site admin" title="Account requests" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>
-          Officials ask for an account at <b>/request-access</b>. Check each one against the official list of elected SK officials before you approve. Approving puts their name and position on the public council page.
+          Officials ask for an account at <b>/request-access</b>. Check each one against the official list of elected SK officials before you approve. Approving puts their name and position on the public council page. Requests left unanswered for {PENDING_REQUEST_DAYS} days are deleted.
         </PageHeader>
         {pending.length === 0 ? <Empty size="sm">No requests waiting.</Empty> : (
           <ul className="space-y-3">
@@ -64,7 +67,8 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-bold">Everyone who can log in</h2>
+        <h2 className="mb-1 text-xl font-bold">Accounts</h2>
+        <p className="hint mb-4 mt-0">Active accounts first, then turned-off accounts, then former officials whose term has ended.</p>
         <ul className="space-y-3">
           {accounts.map((u) => {
             const self = u.id === me.id;
@@ -100,12 +104,41 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
                         </SubmitButton>
                       </form>
                     </div>
+                    <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2">
+                      {u.status !== "former" && isOfficial(u.role) && (
+                        <form action={markTermEnded} className="space-y-1">
+                          <input type="hidden" name="id" value={u.id} />
+                          <SubmitButton className="btn-outline" pending="Saving...">Term ended</SubmitButton>
+                          <p className="hint">They are logged out and listed as a former official. Their records stay.</p>
+                        </form>
+                      )}
+                      {u.status !== "active" && (
+                        <form action={removeAccount} className="space-y-1">
+                          <input type="hidden" name="id" value={u.id} />
+                          <div className="flex items-end gap-2">
+                            <div className="min-w-0 flex-1"><label className="label text-xs" htmlFor={`rm-${u.id}`}>Type REMOVE to erase their personal details</label><input id={`rm-${u.id}`} name="confirm" required autoComplete="off" className="input py-2 text-sm" /></div>
+                            <SubmitButton className="btn-outline text-flag-red" pending="Removing...">Remove</SubmitButton>
+                          </div>
+                          <p className="hint">Email, password, phone, photo and profile are erased. Their name stays on what they published in office.</p>
+                        </form>
+                      )}
+                    </div>
                   </details>
                 )}
               </li>
             );
           })}
         </ul>
+      </section>
+
+      <section className="card max-w-2xl space-y-2 sm:p-6">
+        <h2 className="text-lg font-bold">When the term ends</h2>
+        <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
+          <li>The new council asks for accounts at /request-access, and you approve them against the official list.</li>
+          <li>Mark each outgoing official <b>Term ended</b>. They are logged out and listed as former officials; everything they published stays.</li>
+          <li>If you are handing the admin role over too: add the new admin below, let them log in, and have them mark your account as turned off.</li>
+          <li>Hand over the hosting, database and code accounts as well. The checklist is in docs/OPERATIONS.md.</li>
+        </ol>
       </section>
 
       <form action={createAccount} className="card max-w-xl space-y-3">

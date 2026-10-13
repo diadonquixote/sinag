@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 /** Phone menu. Closes when you pick a page, tap outside, or press Escape. */
-export default function MobileMenu({ children }: { children: React.ReactNode }) {
+export default function MobileMenu({ children, openLabel = "Open menu", closeLabel = "Close menu" }: { children: React.ReactNode; openLabel?: string; closeLabel?: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const box = useRef<HTMLDivElement>(null);
@@ -29,7 +29,7 @@ export default function MobileMenu({ children }: { children: React.ReactNode }) 
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="mobile-menu"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? closeLabel : openLabel}
         className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-ink hover:bg-mist"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

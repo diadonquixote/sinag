@@ -1,6 +1,6 @@
 "use server";
 
-import { sql } from "@/lib/db";
+import { sql, type Row } from "@/lib/db";
 import { createSession, requireRole } from "@/lib/auth";
 import { back } from "@/lib/flash";
 import { audit } from "@/lib/audit";
@@ -46,7 +46,11 @@ export async function updateProfile(fd: FormData): Promise<void> {
   `;
 
   // The header reads the name from the login cookie, so refresh it when the name changes.
-  if (name !== user.name) await createSession({ id: user.id, name, role: user.role });
+  if (name !== user.name) {
+    // The name is also in the login cookie (for the header), so issue a fresh one with the same session number.
+    const [row] = await sql<Row[]>`select session_version from users where id = ${user.id}`;
+    await createSession({ id: user.id, name, role: user.role, sessionVersion: Number(row.session_version) });
+  }
   await audit(user.id, "updated profile", "user", user.id);
   back(PAGE, "ok", "Profile saved.");
 }
