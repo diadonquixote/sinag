@@ -4,19 +4,19 @@ import FeedItem from "@/components/FeedItem";
 import { ArrowLink, DateTile, Empty, SectionHeader } from "@/components/ui";
 import { getFeed, getStats, getUpcoming } from "@/lib/queries";
 import { categoryStyle } from "@/lib/roles";
-import { fmtDateRange } from "@/lib/format";
+import { fmtDateRange, peso } from "@/lib/format";
 import { getSession } from "@/lib/auth";
 
 const STEPS: [string, string][] = [
-  ["Suggest", "Any kabataan can send in a project idea."],
-  ["Review", "The Chairperson checks it and opens it for voting."],
-  ["Vote", "Kabataan spread their votes. Top ideas win."],
-  ["Fund & schedule", "The winner becomes a proposal with a budget and a date."],
-  ["Report", "Updates, minutes and spending are posted publicly."],
+  ["Decide", "The council agrees on a project and records it here."],
+  ["Fund", "The Chairperson approves the budget against the fund that is actually available."],
+  ["Schedule", "It gets dates and a place, and appears on the public calendar."],
+  ["Spend", "Every peso is entered in the ledger, with the receipt attached."],
+  ["Report", "Updates, minutes and financial reports are published for everyone to read."],
 ];
 
 const ROLES: [string, string][] = [
-  ["Chairperson", "Approve ideas, run polls, approve budgets, schedule, publish."],
+  ["Chairperson", "Record projects, approve budgets, set the schedule, publish."],
   ["Secretary", "Turn raw meeting notes into clear minutes and draft resolutions."],
   ["Treasurer", "Keep the ledger and generate plain-language financial reports."],
   ["Kagawad", "Post progress updates for the projects you lead."],
@@ -37,15 +37,11 @@ export default async function Home() {
               Let in the <span className="text-flag-blue">light</span> on every SK peso and project.
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Suggest ideas, vote on what happens next, see the schedule, and read the minutes and financial reports. All in one place, open to every kabataan.
+              See what the SK is doing, what it costs, and where the money went. The calendar, the projects, the ledger, the minutes and the financial reports — open to everyone, no account needed.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/feed" className="btn-primary px-5 py-3">See the bulletin</Link>
-              {user ? (
-                <Link href="/ideas/new" className="btn-yellow px-5 py-3">Suggest a project</Link>
-              ) : (
-                <Link href="/register" className="btn-red px-5 py-3">Join as kabataan</Link>
-              )}
+              <Link href="/funds" className="btn-yellow px-5 py-3">Follow the money</Link>
               <Link href="/calendar" className="btn-outline px-5 py-3">View the calendar</Link>
             </div>
           </div>
@@ -57,14 +53,15 @@ export default async function Home() {
         <div className="container-x">
           <dl className="grid grid-cols-2 gap-px bg-slate-200 sm:grid-cols-4">
             {[
-              ["Ideas from youth", stats.ideas],
-              ["Votes cast", stats.votes],
               ["Funded projects", stats.projects],
               ["Completed", stats.completed],
+              ["Published records", stats.records],
+              ["Spent so far", peso(stats.spent)],
             ].map(([label, value], i) => (
               <div key={label as string} className={`bg-white py-6 ${i % 2 === 0 ? "pr-4" : "pl-5"} ${i === 0 ? "sm:pr-6" : "sm:px-6"}`}>
                 <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</dt>
-                <dd className="mt-2 font-display text-4xl font-bold leading-none text-flag-blue tabular-nums">{value as number}</dd>
+                {/* The peso total is the longest of these, so it steps down a size to stay on one line. */}
+                <dd className={`mt-2 font-display font-bold leading-none text-flag-blue tabular-nums ${String(value).length > 6 ? "text-2xl sm:text-3xl" : "text-4xl"}`}>{value}</dd>
               </div>
             ))}
           </dl>
@@ -75,7 +72,7 @@ export default async function Home() {
       <section className="container-x py-16 sm:py-20">
         <SectionHeader eyebrow="Coming up" title="What the SK is doing next" action={<ArrowLink href="/calendar">Full calendar</ArrowLink>} />
         {upcoming.length === 0 ? (
-          <Empty action={<Link href="/ideas/new" className="btn-outline btn-sm">Suggest a project</Link>}>Nothing is scheduled yet. Check back soon, or suggest a project.</Empty>
+          <Empty>Nothing is scheduled yet. Projects appear here once the council sets their dates.</Empty>
         ) : (
           <div className={`grid gap-4 sm:grid-cols-2 ${upcoming.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
             {upcoming.map((p) => {

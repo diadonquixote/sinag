@@ -36,8 +36,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
         (select count(*) from reports where author_id = ${id} and status = 'published')::int as reports,
         (select count(*) from transactions where created_by = ${id} and voided_at is null)::int as entries,
         ((select count(*) from minutes where published_by = ${id}) + (select count(*) from reports where published_by = ${id}))::int as approved_docs,
-        (select count(*) from audit_log where user_id = ${id} and action = 'opened poll')::int as polls,
-        (select count(*) from audit_log where user_id = ${id} and action in ('approved idea for polling', 'declined idea'))::int as ideas,
+        (select count(*) from audit_log where user_id = ${id} and action = 'created project')::int as started,
         (select count(*) from audit_log where user_id = ${id} and action = 'approved project and budget')::int as funded`,
     sql<Row[]>`
       select * from (
@@ -66,8 +65,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
       ["Ledger entries recorded", counts.entries],
       ["Documents approved", counts.approved_docs],
       ["Projects funded", counts.funded],
-      ["Polls opened", counts.polls],
-      ["Ideas reviewed", counts.ideas],
+      ["Projects started", counts.started],
     ] as [string, number][]
   ).filter(([, n]) => n > 0);
 

@@ -12,7 +12,6 @@ const LINKS: NavItem[] = [
   { href: "/feed", label: "Bulletin" },
   { href: "/projects", label: "Projects" },
   { href: "/calendar", label: "Calendar" },
-  { href: "/ideas", label: "Ideas & Polls" },
   { href: "/funds", label: "Funds" },
   { href: "/council", label: "Council" },
 ];
@@ -49,7 +48,6 @@ export default async function Header() {
           ) : (
             <>
               <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:text-flag-blue">Log in</Link>
-              <Link href="/register" className="btn-primary btn-sm">Join as kabataan</Link>
             </>
           )}
         </div>
@@ -77,7 +75,6 @@ export default async function Header() {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Link href="/login" className="btn-outline">Log in</Link>
-                  <Link href="/register" className="btn-primary">Join as kabataan</Link>
                 </div>
               )}
             </div>

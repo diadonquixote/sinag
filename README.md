@@ -1,22 +1,51 @@
-# Sinag
+# Sinag v1
 
-**Sinag** means *a ray of light*. It is a transparency web app for Sangguniang Kabataan (SK) councils: kabataan suggest and vote on projects, the council funds and schedules them, and every set of minutes, financial report and project update is posted where the whole barangay can read it.
+**Sinag** means *a ray of light*. It is a transparency web app for Sangguniang Kabataan (SK)
+councils: the council records what it is doing and what it spends, and the whole barangay can
+read it without an account.
 
-Built by PDYN Technologies, from a first-hand problem: SK work that happens out of public view. Colors: white with the Philippine flag's blue, red and yellow.
+Built by PDYN Technologies, from a first-hand problem: SK work that happens out of public view.
+Colors: white with the Philippine flag's blue, red and yellow.
+
+## What v1 is, and why
+
+This is the half of Sinag that publishes public records. It collects no personal data from
+young people, so it can go live while the privacy groundwork for the rest is being done.
+
+RA 10742 already requires the SK to disclose its transactions and documents of public interest.
+v1 is a way of keeping that promise. Everything in it is information the council is obliged to
+publish anyway.
+
+**Deliberately not in v1:** public sign-up, the youth idea box, polls and voting, volunteering,
+and kabataan accounts. Those collect personal data from people who may be under 18, which brings
+duties under the Data Privacy Act — a privacy notice, a child privacy impact assessment, erasure
+and export. They come back in v2, once that groundwork exists. The code for them is in this
+repository's history, not deleted from the world.
+
+The AI assistants are present in the code but switched off, because free AI tiers forbid
+personal data and council minutes are full of it. With no key set, the minutes assistant gives
+the secretary a plain structured draft to edit, which is all v1 needs.
 
 ## What it does
 
 | Who | What they get |
 | --- | --- |
-| **Everyone (no login)** | Public bulletin, project pages with budget vs. actual spending, monthly calendar, polls and ideas, fund transparency page with the full ledger |
-| **Kabataan** | Suggest project ideas, vote in polls (a fixed number of votes each, can be undone), volunteer for events, track their ideas |
-| **SK Chairperson** | Review ideas, open and close polls, turn winners into AI-drafted proposals with itemized budgets, approve budgets (blocked if the fund can't cover them), schedule with overlap checks, **approve everything before it is published**, audit log, create official accounts |
-| **SK Secretary** | Type raw Taglish notes or upload up to 6 photos of handwritten pages (read automatically when a vision model is set, and kept with the minutes as the original record) and get structured minutes: attendance, decisions, action items, draft resolutions, and a budget check |
-| **SK Treasurer** | Ledger (entries are voided, never deleted) with receipt photos (taken on the phone or uploaded; read automatically when a vision model is set; shown on the public ledger unless hidden), generate financial reports with code-computed numbers, AI-written plain-language summary and automatic warnings (overspending, missing receipts) |
+| **Everyone (no login)** | Public bulletin, project pages with budget against actual spending, monthly calendar, the full fund ledger, and the SK council organization chart |
+| **SK Chairperson** | Record projects the council agreed on, approve budgets (blocked when the fund cannot cover them), schedule with overlap checks, **approve everything before it is published**, audit log, create official accounts |
+| **SK Secretary** | Type or paste raw Taglish notes, or attach photos of handwritten pages as the original record, and get structured minutes: attendance, decisions, action items, draft resolutions, and a budget check |
+| **SK Treasurer** | Ledger (entries are voided, never deleted) with receipt photos, shown on the public ledger unless hidden; financial reports with every number computed in code, plus automatic warnings for overspending and missing receipts |
 | **SK Kagawad** | Post progress updates on the projects they lead |
-| **Every account** | A profile with photo, bio, purok, skills and a private mobile number. Officials appear on the public **SK council organization chart**; clicking anyone opens their profile with credentials, the contributions they list, and an automatic record of what they have done in Sinag. Kabataan photos are only shown to themselves and SK officials. Point persons see volunteers' contact details. |
+| **Every official** | A profile with photo, bio, purok and committee, shown on the public council chart with their credentials, contributions, and an automatic record of what they have done in Sinag |
 
-**Trust rules built in:** AI only drafts. Numbers are always computed in code. Minutes and reports go draft, then submitted, then published by the Chairperson. Every important action is written to an audit log.
+**Trust rules built in:** numbers are always computed in code, never by a model. Minutes and
+reports go draft, then submitted, then published by the Chairperson. Every important action is
+written to an audit log. The ledger is append-only.
+
+## Where projects come from
+
+v1 has no public idea box, so a project starts in a meeting. The council agrees on it, the
+Chairperson records it on their desk, and from there it behaves exactly as before: approve the
+budget against the available fund, set the dates, and it appears on the public calendar.
 
 ## Run it locally
 
@@ -32,7 +61,7 @@ npm run dev
 
 Forgot the demo password, or changed `SEED_PASSWORD`? Run `npm run db:passwords` to reset every `@sinag.demo` account to the current `SEED_PASSWORD`.
 
-Demo accounts (after seeding; password is your `SEED_PASSWORD`): `chair@sinag.demo`, `secretary@sinag.demo`, `treasurer@sinag.demo`, `kagawad@sinag.demo`, `youth1@sinag.demo`.
+Demo accounts (after seeding; password is your `SEED_PASSWORD`): `chair@sinag.demo`, `secretary@sinag.demo`, `treasurer@sinag.demo`, `kagawad@sinag.demo`. The seed also leaves a `youth1@sinag.demo` account from the full version; v1 has no desk for it.
 
 ## Environment variables
 
@@ -48,14 +77,20 @@ Demo accounts (after seeding; password is your `SEED_PASSWORD`): `chair@sinag.de
 | `AI_BASE_URL` / `AI_API_KEY` | optional | Point at any other OpenAI-compatible provider |
 | `SEED_PASSWORD` | demo only | Password for seeded demo accounts |
 
-### Turning on the AI assistants (free)
+### The AI assistants are off in v1, on purpose
 
-1. Open [aistudio.google.com/apikey](https://aistudio.google.com/apikey), sign in with Google and create an API key.
-2. Put it in `.env.local` as `GEMINI_API_KEY=...` and restart `npm run dev`.
+Google's [Gemini API terms](https://ai.google.dev/gemini-api/terms) say: "Do not submit
+sensitive, confidential, or personal information to the Unpaid Services." Minutes name people
+and receipts carry amounts and vendors, so the free tier is not an option for real council
+records, and under the Data Privacy Act the SK stays accountable for what a processor does
+with them.
 
-That is the whole setup — the model IDs are built in. Free tiers have daily limits, so if
-one is reached the assistants say "the free AI limit has been reached" and fall back to
-template drafts. Nothing is lost: photos and receipts are saved either way.
+So v1 ships with no key set. The minutes assistant still produces a structured draft from the
+secretary's notes using plain rules, which she edits as she would anyway.
+
+To turn the assistants on later, enable billing on the Gemini API — on the paid tier Google
+does not train on your content — and set `GEMINI_API_KEY`. At an SK's volume this runs to a
+few pesos a month. Set a budget cap when you enable it.
 
 Without any AI key the app still works: assistants fall back to simple template drafts and say so.
 

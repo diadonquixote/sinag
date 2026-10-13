@@ -25,8 +25,6 @@ export default function Footer() {
         <div className="text-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-ink">Take part</p>
           <ul className="mt-3 space-y-2 text-slate-600">
-            <li><Link href="/register" className="hover:text-flag-blue">Join as kabataan</Link></li>
-            <li><Link href="/ideas/new" className="hover:text-flag-blue">Suggest a project</Link></li>
             <li><Link href="/login" className="hover:text-flag-blue">SK officials log in</Link></li>
           </ul>
         </div>

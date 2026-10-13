@@ -7,7 +7,7 @@ import { audit } from "@/lib/audit";
 import { fundSummary } from "@/lib/funds";
 import { polishUpdate } from "@/lib/ai";
 import { fmtDate, peso } from "@/lib/format";
-import { isOfficial } from "@/lib/roles";
+import { CATEGORIES, isOfficial } from "@/lib/roles";
 
 const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
 
@@ -15,6 +15,40 @@ function projectId(fd: FormData): number {
   const id = Number(fd.get("project_id"));
   if (!Number.isInteger(id)) back("/projects", "err", "Project not found.");
   return id;
+}
+
+/**
+ * Creates a project directly.
+ *
+ * In v1 there is no public idea box or poll, so a project starts here: the council agrees on it
+ * in a meeting, and the chairperson records it. It begins as a proposal, exactly as one drafted
+ * from an idea would, so approval, funding and scheduling work the same way afterwards.
+ */
+export async function createProject(fd: FormData): Promise<void> {
+  const chair = await requireRole("chairperson");
+  const title = String(fd.get("title") ?? "").trim();
+  const description = String(fd.get("description") ?? "").trim();
+  const category = String(fd.get("category") ?? "").trim();
+  const budget = Number(String(fd.get("budget") ?? "").replace(/[^\d.]/g, ""));
+
+  if (title.length < 3) back("/dashboard/chair", "err", "Give the project a title.");
+  if (description.length < 10) back("/dashboard/chair", "err", "Describe the project in a sentence or two, so the public understands it.");
+  if (!(CATEGORIES as readonly string[]).includes(category)) back("/dashboard/chair", "err", "Choose a category.");
+  if (!(budget > 0) || budget > 100_000_000) back("/dashboard/chair", "err", "Enter the budget in pesos.");
+
+  const [project] = await sql<Row[]>`
+    insert into projects (title, description, category, budget, status)
+    values (${title.slice(0, 200)}, ${description.slice(0, 4000)}, ${category}, ${budget}, 'proposed')
+    returning id
+  `;
+  const id = project.id as number;
+  await audit(chair.id, "created project", "project", id, `${title} (${peso(budget)})`);
+
+  const funds = await fundSummary();
+  const short = funds.available < budget
+    ? ` Note: only ${peso(funds.available)} is available, so this cannot be approved yet.`
+    : "";
+  back("/dashboard/chair", "ok", `"${title}" recorded as a proposal for ${peso(budget)}.${short}`);
 }
 
 /** Chairperson edits the requested budget while a proposal is still under review (e.g. after getting real quotes). */
@@ -135,16 +169,3 @@ export async function postUpdate(fd: FormData): Promise<void> {
 }
 
 /** Any signed-in person can raise a hand to help with a scheduled project. */
-export async function toggleVolunteer(fd: FormData): Promise<void> {
-  const user = await requireRole();
-  const id = projectId(fd);
-  const path = `/projects/${id}`;
-
-  const [project] = await sql<Row[]>`select status from projects where id = ${id}`;
-  if (!project || !["scheduled", "ongoing"].includes(project.status as string)) back(path, "err", "Volunteering is open for scheduled and ongoing projects.");
-
-  const removed = await sql<Row[]>`delete from project_volunteers where project_id = ${id} and user_id = ${user.id} returning user_id`;
-  if (removed.length > 0) back(path, "ok", "You are no longer on the volunteer list.");
-  await sql`insert into project_volunteers (project_id, user_id) values (${id}, ${user.id}) on conflict do nothing`;
-  back(path, "ok", "Salamat! You are on the volunteer list. The point person will reach out.");
-}

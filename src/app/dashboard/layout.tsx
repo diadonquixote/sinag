@@ -7,7 +7,7 @@ import { DeskTabs, type NavItem } from "@/components/NavLinks";
 
 const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
   chairperson: [
-    { href: "/dashboard/chair", label: "Approvals & polls" },
+    { href: "/dashboard/chair", label: "Approvals & projects" },
     { href: "/dashboard/secretary", label: "Minutes" },
     { href: "/dashboard/treasurer", label: "Finance" },
     { href: "/dashboard/team", label: "Team" },
@@ -15,7 +15,7 @@ const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
   secretary: [{ href: "/dashboard/secretary", label: "Minutes assistant" }],
   treasurer: [{ href: "/dashboard/treasurer", label: "Finance assistant" }],
   kagawad: [{ href: "/dashboard/kagawad", label: "My projects" }],
-  kabataan: [{ href: "/dashboard", label: "My activity", exact: true }],
+  kabataan: [],   // v1 has no kabataan desk
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

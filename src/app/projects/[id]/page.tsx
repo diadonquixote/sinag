@@ -4,12 +4,11 @@ import { Badge, Flash, ProgressBar } from "@/components/ui";
 import SubmitButton from "@/components/SubmitButton";
 import { sql, type Row } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
-import { categoryStyle, isOfficial, PROJECT_STATUS } from "@/lib/roles";
+import { categoryStyle, PROJECT_STATUS } from "@/lib/roles";
 import { fmtDateRange, fmtDateTime, peso, pct, todayManila } from "@/lib/format";
-import Avatar from "@/components/Avatar";
 import { fundSummary } from "@/lib/funds";
 import type { Proposal } from "@/lib/types";
-import { approveProject, postUpdate, scheduleProject, toggleVolunteer, updateProposalBudget } from "@/actions/projects";
+import { approveProject, postUpdate, scheduleProject, updateProposalBudget } from "@/actions/projects";
 
 export const maxDuration = 60;
 
@@ -27,10 +26,9 @@ export default async function ProjectPage({
   const [p] = await sql<Row[]>`
     select p.id, p.title, p.description, p.category, p.status, p.location, p.progress, p.proposal, p.lead_id,
            p.start_date::text as start_date, p.end_date::text as end_date, p.budget::float8 as budget,
-           u.name as lead_name, i.id as idea_id,
-           (select count(*) from votes v where v.idea_id = i.id)::int as votes,
+           u.name as lead_name,
            coalesce((select sum(t.amount) from transactions t where t.project_id = p.id and t.kind = 'expense' and t.voided_at is null), 0)::float8 as spent
-    from projects p left join users u on u.id = p.lead_id left join ideas i on i.id = p.idea_id
+    from projects p left join users u on u.id = p.lead_id
     where p.id = ${id} and p.status <> 'cancelled'`;
   if (!p) notFound();
 
@@ -39,11 +37,8 @@ export default async function ProjectPage({
   const canUpdate = !!user && ["scheduled", "ongoing", "completed"].includes(p.status) &&
     (user.role === "chairperson" || user.role === "secretary" || user.role === "treasurer" || (user.role === "kagawad" && p.lead_id === user.id));
 
-  const [updates, volunteers, spendLines, officials, funds] = await Promise.all([
+  const [updates, spendLines, officials, funds] = await Promise.all([
     sql<Row[]>`select pu.body, pu.progress, pu.created_at, u.name from project_updates pu left join users u on u.id = pu.author_id where pu.project_id = ${id} order by pu.created_at desc`,
-    sql<Row[]>`
-      select v.user_id, u.name, u.role, u.phone, u.skills, u.purok, extract(epoch from u.avatar_updated_at)::bigint::text as avatar_v
-      from project_volunteers v join users u on u.id = v.user_id where v.project_id = ${id} order by v.created_at`,
     sql<Row[]>`select t.tx_date::text as tx_date, t.description, t.amount::float8 as amount, t.reference,
                  coalesce((select array_agg(r.id order by r.id) from transaction_receipts r where r.transaction_id = t.id and r.is_public), '{}') as receipts
                from transactions t where t.project_id = ${id} and t.kind = 'expense' and t.voided_at is null order by t.tx_date desc, t.id desc`,
@@ -53,10 +48,6 @@ export default async function ProjectPage({
 
   const st = PROJECT_STATUS[p.status] ?? PROJECT_STATUS.proposed;
   const proposal = p.proposal as Proposal | null;
-  const joined = !!user && volunteers.some((v) => v.user_id === user.id);
-  // Officials see volunteers' photos and contact details so they can coordinate. The public sees names only.
-  const seesContacts = !!user && isOfficial(user.role);
-  const photoFor = (v: Row) => (seesContacts || v.user_id === user?.id || isOfficial(v.role as string) ? (v.avatar_v as string | null) : null);
 
   return (
     <div className="container-x py-10 sm:py-12">
@@ -75,7 +66,6 @@ export default async function ProjectPage({
           <section className="card">
             <h2 className="text-lg font-bold">About this project</h2>
             <p className="mt-2 whitespace-pre-line text-slate-700">{p.description}</p>
-            {p.votes > 0 && <p className="mt-3 text-sm text-slate-600">Chosen by kabataan with {p.votes} votes.</p>}
           </section>
 
           {proposal && (
@@ -157,45 +147,6 @@ export default async function ProjectPage({
             )}
             <Link href="/funds" className="block border-t border-slate-100 pt-3 text-xs font-semibold text-flag-blue hover:underline">See the full ledger →</Link>
           </section>
-
-          {["scheduled", "ongoing"].includes(p.status) && (
-            <section className="card">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="text-lg font-bold">Volunteers</h2>
-                <span className="text-sm font-semibold text-slate-500">{volunteers.length}</span>
-              </div>
-              {volunteers.length > 0 ? (
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {volunteers.map((v) => (
-                    <li key={v.user_id} className="flex items-center gap-2 rounded-full bg-mist py-1 pl-1 pr-3 text-xs font-medium text-ink ring-1 ring-inset ring-slate-200">
-                      <Avatar id={v.user_id} name={v.name} v={photoFor(v)} size="xs" tone="light" />
-                      {v.name}
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="mt-2 text-sm text-slate-500">Be the first to help.</p>}
-              {seesContacts && volunteers.length > 0 && (
-                <details className="group mt-4 rounded-xl border border-slate-200">
-                  <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-                    Contact details <span className="text-xs font-normal text-slate-400">officials only <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-180">⌄</span></span>
-                  </summary>
-                  <ul className="divide-y divide-slate-100 border-t border-slate-100 text-sm">
-                    {volunteers.map((v) => (
-                      <li key={v.user_id} className="px-3 py-2.5">
-                        <p className="font-semibold text-ink">{v.name}</p>
-                        <p className="text-xs text-slate-500">{[v.purok, v.skills].filter(Boolean).join(" · ") || "No details yet"}</p>
-                        {v.phone ? <a href={`tel:${String(v.phone).replace(/\s/g, "")}`} className="text-xs font-semibold text-flag-blue hover:underline">{v.phone}</a> : <p className="text-xs text-slate-400">No mobile number</p>}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-              {user ? (
-                <form action={toggleVolunteer} className="mt-4"><input type="hidden" name="project_id" value={p.id} />
-                  <SubmitButton className={`${joined ? "btn-outline" : "btn-yellow"} w-full`}>{joined ? "Leave the volunteer list" : "I want to help"}</SubmitButton></form>
-              ) : <Link href="/login" className="btn-yellow mt-4 w-full">Log in to volunteer</Link>}
-            </section>
-          )}
 
           {isChair && p.status === "proposed" && funds && (
             <section className="card space-y-3 border-flag-blue/30 ring-4 ring-flag-blue/5">

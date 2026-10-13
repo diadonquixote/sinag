@@ -20,7 +20,7 @@ export const ROLE_HOME: Record<Role, string> = {
   secretary: "/dashboard/secretary",
   treasurer: "/dashboard/treasurer",
   kagawad: "/dashboard/kagawad",
-  kabataan: "/dashboard",
+  kabataan: "/",   // v1 has no kabataan desk; see README
 };
 
 export const CATEGORIES = [

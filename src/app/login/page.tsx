@@ -15,8 +15,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <AuthShell
       title="Welcome back"
-      intro="SK officials and kabataan log in here."
-      points={["Vote in polls and suggest projects", "Volunteer for scheduled events", "Officials: open your desk to approve, record and report"]}
+      intro="For SK officials. Everything the public needs is already open, with no account."
+      points={["Record projects, budgets and schedules", "Write minutes and financial reports", "Publish them for everyone to read"]}
     >
       <Flash sp={sp} />
       <form action={login} className="space-y-5">
@@ -24,7 +24,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div><label className="label" htmlFor="password">Password</label><PasswordInput id="password" name="password" required autoComplete="current-password" /></div>
         <SubmitButton className="btn-primary w-full py-3" pending="Logging in...">Log in</SubmitButton>
       </form>
-      <p className="mt-6 border-t border-slate-100 pt-6 text-sm text-slate-600">New here? <Link href="/register" className="font-semibold text-flag-blue hover:underline">Join as kabataan</Link>. SK officials: your Chairperson creates your account.</p>
     </AuthShell>
   );
 }

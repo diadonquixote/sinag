@@ -36,7 +36,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       >
         {official
           ? "This is what kabataan see on the SK council chart and your public profile. Keep it up to date so people know who to talk to."
-          : "Help the SK get to know you. Your profile helps the council reach you when you volunteer."}
+          : "Help the SK get to know you."}
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -80,7 +80,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               <div>
                 <label className="label" htmlFor="skills">What can you help with?</label>
                 <input id="skills" name="skills" maxLength={200} defaultValue={me.skills ?? ""} placeholder="e.g. first aid, photography, cooking, driving" className="input" />
-                <p className="hint">Separate with commas. The point person sees this when you volunteer.</p>
+                <p className="hint">Separate with commas.</p>
               </div>
               </div>
             </fieldset>

@@ -6,9 +6,9 @@ export async function getStats() {
     select
       (select count(*) from projects where status in ('approved','scheduled','ongoing','completed'))::int as projects,
       (select count(*) from projects where status = 'completed')::int as completed,
-      (select count(*) from ideas)::int as ideas,
-      (select count(*) from votes)::int as votes,
-      (select count(*) from users where role = 'kabataan')::int as youth
+      (select count(*) from minutes where status = 'published')::int
+        + (select count(*) from reports where status = 'published')::int as records,
+      (select coalesce(sum(amount), 0) from transactions where kind = 'expense' and voided_at is null)::float8 as spent
   `;
   return row;
 }
@@ -67,8 +67,7 @@ export async function getProjects(filters: { category?: string | null; status?: 
            p.start_date::text as start_date, p.end_date::text as end_date,
            p.budget::float8 as budget,
            coalesce((select sum(t.amount) from transactions t
-                     where t.project_id = p.id and t.kind = 'expense' and t.voided_at is null), 0)::float8 as spent,
-           (select count(*) from project_volunteers v where v.project_id = p.id)::int as volunteers
+                     where t.project_id = p.id and t.kind = 'expense' and t.voided_at is null), 0)::float8 as spent
     from projects p
     where p.status <> 'cancelled'
       and (${category}::text is null or p.category = ${category})
@@ -92,27 +91,4 @@ export async function getMonthEvents(monthStart: string, monthEnd: string) {
       and coalesce(end_date, start_date) >= ${monthStart}::date
     order by start_date, id
   `;
-}
-
-/** Open and recently closed polls with live vote counts per idea. */
-export async function getPolls() {
-  const polls = await sql<Row[]>`
-    select id, title, status, max_votes, closes_at
-    from polls
-    order by (status = 'open') desc, closes_at desc
-    limit 4
-  `;
-  if (polls.length === 0) return [];
-  const ids = polls.map((p) => p.id as number);
-  const ideas = await sql<Row[]>`
-    select pi.poll_id, i.id, i.title, i.description, i.category, i.status,
-           i.est_budget::float8 as est_budget, u.name as author,
-           (select count(*) from votes v where v.poll_id = pi.poll_id and v.idea_id = i.id)::int as votes
-    from poll_ideas pi
-    join ideas i on i.id = pi.idea_id
-    join users u on u.id = i.author_id
-    where pi.poll_id in ${sql(ids)}
-    order by votes desc, i.created_at
-  `;
-  return polls.map((p): Row => ({ ...p, ideas: ideas.filter((i) => i.poll_id === p.id) }));
 }

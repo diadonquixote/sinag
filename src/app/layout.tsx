@@ -9,7 +9,7 @@ const display = Fraunces({ subsets: ["latin"], variable: "--font-display", displ
 
 export const metadata: Metadata = {
   title: { default: "Sinag — SK transparency", template: "%s · Sinag" },
-  description: "Sinag brings the Sangguniang Kabataan's ideas, votes, projects, minutes and funds into the light, for every kabataan to see.",
+  description: "Sinag brings the Sangguniang Kabataan's projects, schedule, minutes and spending into the light, for every kabataan to see.",
 };
 
 // Pages read the session and the database on every request.
