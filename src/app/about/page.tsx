@@ -8,7 +8,9 @@ import { LAW, Section } from "../privacy/notice";
 
 export async function generateMetadata() {
   const { lang } = await getT();
-  return { title: lang === "fil" ? "Tungkol sa site na ito" : "About this site" };
+  return lang === "fil"
+    ? { title: "Tungkol sa site na ito", description: "Ano ang Sinag, sino ang nagpapatakbo nito, at gaano mo ito mapagkakatiwalaan." }
+    : { title: "About this site", description: "What Sinag is, who runs it, and how far you can rely on it." };
 }
 
 const A = ({ href, children }: { href: string; children: React.ReactNode }) => (

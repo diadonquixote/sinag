@@ -123,6 +123,8 @@ A pilot with one council. What is checked on every change, in
   with no errors under the security policy, both languages work, and the whole account life
   cycle works (request → approval → log in → password change logs out other devices → account
   turned off)
+- Lighthouse on phone settings for five public pages, with the scores and any failed checks
+  reported on the run
 
 What is not done yet: an independent security review, load testing, a review of the Filipino
 text by more readers, and the council's resolution adopting the system and naming its privacy

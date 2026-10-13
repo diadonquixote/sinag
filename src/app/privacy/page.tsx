@@ -7,7 +7,9 @@ import { PrivacyEn, PrivacyFil } from "./notice";
 
 export async function generateMetadata() {
   const { lang } = await getT();
-  return { title: lang === "fil" ? "Abiso sa privacy" : "Privacy notice" };
+  return lang === "fil"
+    ? { title: "Abiso sa privacy", description: "Anong personal na datos ang hawak at inilalathala ng Sinag, bakit, at ano ang mga karapatan mo." }
+    : { title: "Privacy notice", description: "What personal data Sinag holds and publishes, why, and what your rights are." };
 }
 
 export default async function PrivacyPage() {

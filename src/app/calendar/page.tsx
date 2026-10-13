@@ -58,7 +58,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             const inMonth = day.slice(0, 7) === m;
             return (
               <div key={day} className={`min-h-28 border-b border-r border-slate-100 p-1.5 [&:nth-child(7n)]:border-r-0 ${inMonth ? "bg-white" : "bg-slate-50/70"}`}>
-                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${day === today ? "bg-flag-red text-white" : inMonth ? "text-ink" : "text-slate-400"}`}>{Number(day.slice(8))}</span>
+                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${day === today ? "bg-flag-red text-white" : inMonth ? "text-ink" : "text-slate-500"}`}>{Number(day.slice(8))}</span>
                 <div className="mt-1 space-y-1">
                   {inMonth && onDay(day).map((e) => (
                     <Link key={e.id} href={`/projects/${e.id}`} className={`block truncate rounded px-1.5 py-0.5 text-[11px] font-semibold ${categoryStyle(e.category).chip}`} title={e.title}>{e.title}</Link>

@@ -142,7 +142,7 @@ export default async function ProjectPage({
                   {spendLines.map((s, i) => (
                     <li key={i} className="flex justify-between gap-3">
                       <span className="min-w-0 text-slate-600">{s.description}
-                        <span className="block text-xs text-slate-400">
+                        <span className="block text-xs text-slate-500">
                           {s.reference ?? ""}
                           {(s.receipts as number[]).map((rid, n) => (
                             <a key={rid} href={`/api/receipt/${rid}`} target="_blank" rel="noreferrer" className="ml-1 font-semibold text-flag-blue hover:underline first:ml-0">{s.reference || n > 0 ? " · " : ""}{t("project.receipt")}{(s.receipts as number[]).length > 1 ? ` ${n + 1}` : ""}</a>

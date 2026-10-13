@@ -45,7 +45,7 @@ export default async function Footer() {
       <div className="border-t border-slate-200">
         <div className="container-x flex flex-col items-center justify-between gap-4 py-5 text-center text-sm text-slate-600 md:flex-row md:text-left">
           <p>&copy; {new Date().getFullYear()} Sinag. {t("footer.rights")}</p>
-          <Link href="/about#pdyn" aria-label={t("footer.pdynLink")} title={t("footer.pdynLink")} className="rounded-lg transition hover:opacity-80">
+          <Link href="/about#pdyn" title={t("footer.pdynLink")} className="rounded-lg transition hover:opacity-80">
             <PdynLogo />
           </Link>
           <a href={`mailto:${PDYN_EMAIL}`} className={link}>{PDYN_EMAIL}</a>

@@ -18,7 +18,7 @@ export default async function ProjectCard({ p }: { p: Row }) {
           <span className={`h-2 w-2 rounded-full ${cat.dot}`} />{p.category}
         </span>
       </div>
-      <h3 className="mt-2 text-lg font-bold leading-snug"><Link href={`/projects/${p.id}`} className="after:absolute after:inset-0 after:rounded-2xl hover:text-flag-blue">{p.title}</Link></h3>
+      <h2 className="mt-2 text-lg font-bold leading-snug"><Link href={`/projects/${p.id}`} className="after:absolute after:inset-0 after:rounded-2xl hover:text-flag-blue">{p.title}</Link></h2>
       <p className="mt-1 text-sm text-slate-600">{p.start_date ? fmtDateRange(p.start_date, p.end_date) : t("project.tba")}{p.location ? ` · ${p.location}` : ""}</p>
       <div className="mt-auto space-y-3 pt-4">
         {p.spent !== undefined && (

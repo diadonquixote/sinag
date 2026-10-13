@@ -226,7 +226,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
           </ul>
         </section>
       )}
-      <p className="mt-8 text-xs text-slate-400">{t("council.footnote", { name: p.name.split(" ")[0], date: fmtDate(new Date()) })}</p>
+      <p className="mt-8 text-xs text-slate-500">{t("council.footnote", { name: p.name.split(" ")[0], date: fmtDate(new Date()) })}</p>
     </div>
   );
 }

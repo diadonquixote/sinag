@@ -37,7 +37,7 @@ export default async function FundsPage() {
       </div>
       <p className="mt-3 text-xs text-slate-500">{t("funds.computed")}</p>
 
-      <div className="mt-14"><SectionHeader as="h3" title={t("funds.budgetTitle")}>{t("funds.budgetLead")}</SectionHeader></div>
+      <div className="mt-14"><SectionHeader title={t("funds.budgetTitle")}>{t("funds.budgetLead")}</SectionHeader></div>
       {projects.length === 0 ? <Empty>{t("funds.noProjects")}</Empty> : (
         <div className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (
@@ -49,14 +49,14 @@ export default async function FundsPage() {
         </div>
       )}
 
-      <div className="mt-14"><SectionHeader as="h3" title={t("funds.ledger")}>{t("funds.ledgerLead")}</SectionHeader></div>
+      <div className="mt-14"><SectionHeader title={t("funds.ledger")}>{t("funds.ledgerLead")}</SectionHeader></div>
       {ledger.length === 0 ? <Empty>{t("funds.empty")}</Empty> : (
         <div className="relative overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[720px] text-sm">
             <thead><tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-3 pl-5 pr-2">{t("funds.date")}</th><th className="pr-2">{t("funds.description")}</th><th className="pr-2">{t("funds.project")}</th><th className="pr-2">{t("funds.or")}</th><th className="pr-2">{t("funds.receipt")}</th><th className="pr-5 text-right">{t("funds.amount")}</th></tr></thead>
             <tbody>
               {ledger.map((row) => (
-                <tr key={row.id} className={`border-b border-slate-100 last:border-0 ${row.voided_at ? "text-slate-400" : ""}`}>
+                <tr key={row.id} className={`border-b border-slate-100 last:border-0 ${row.voided_at ? "text-slate-500" : ""}`}>
                   <td className="whitespace-nowrap py-3 pl-5 pr-2">{fmtDate(row.tx_date, "short")}</td>
                   <td className="py-3 pr-2"><span className={row.voided_at ? "line-through" : ""}>{row.description}</span>{row.voided_at && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs">{t("funds.voided", { reason: row.void_reason ?? "" })}</span>}</td>
                   <td className="py-3 pr-2 text-slate-600">{row.project ?? ""}</td>
@@ -71,7 +71,7 @@ export default async function FundsPage() {
                           </a>
                         ))}
                       </span>
-                    ) : row.kind === "expense" && !row.voided_at ? <span className="text-xs text-slate-400">{t("funds.none")}</span> : null}
+                    ) : row.kind === "expense" && !row.voided_at ? <span className="text-xs text-slate-500">{t("funds.none")}</span> : null}
                   </td>
                   <td className={`whitespace-nowrap py-3 pr-5 text-right font-semibold tabular-nums ${row.voided_at ? "line-through" : row.kind === "income" ? "text-emerald-700" : "text-flag-red"}`}>{row.kind === "income" ? "+" : "−"}{peso(row.amount)}</td>
                 </tr>

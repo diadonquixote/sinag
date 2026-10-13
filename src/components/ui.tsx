@@ -39,7 +39,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
   return (
     <div>
       {label && <div className="mb-1 flex justify-between text-xs text-slate-600"><span>{label}</span><span>{v}%</span></div>}
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-label={label ?? "Progress"} aria-valuenow={v} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full rounded-full bg-flag-blue" style={{ width: `${v}%` }} />
       </div>
     </div>
