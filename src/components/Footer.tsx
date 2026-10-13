@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import PdynLogo from "./PdynLogo";
+import { ORG_NAME } from "@/lib/org";
 
 export default function Footer() {
   return (
@@ -9,7 +10,7 @@ export default function Footer() {
         <div className="sm:col-span-2 md:col-span-1">
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-slate-600">
-            Sinag means a ray of light. Everything the Sangguniang Kabataan decides, spends and does, in the open.
+            Sinag means a ray of light. Everything the {ORG_NAME} decides, spends and does, in the open.
           </p>
         </div>
         <div className="text-sm">

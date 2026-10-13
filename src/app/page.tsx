@@ -6,6 +6,7 @@ import { getFeed, getStats, getUpcoming } from "@/lib/queries";
 import { categoryStyle } from "@/lib/roles";
 import { fmtDateRange, peso } from "@/lib/format";
 import { getSession } from "@/lib/auth";
+import { ORG_NAME } from "@/lib/org";
 
 const STEPS: [string, string][] = [
   ["Decide", "The council agrees on a project and records it here."],
@@ -32,7 +33,7 @@ export default async function Home() {
         <SunRays className="pointer-events-none absolute -right-36 -top-28 -z-10 h-[22rem] w-[22rem] opacity-25 sm:-right-24 sm:top-1/2 sm:h-[40rem] sm:w-[40rem] sm:-translate-y-1/2 sm:opacity-50 lg:-right-16 lg:h-[44rem] lg:w-[44rem] lg:opacity-100" />
         <div className="container-x flex min-h-[30rem] items-center py-16 sm:min-h-[36rem] sm:py-24">
           <div className="max-w-xl lg:max-w-[34rem]">
-            <p className="eyebrow">Para sa kabataan, kasama ang kabataan</p>
+            <p className="eyebrow">{ORG_NAME}</p>
             <h1 className="mt-4 text-[2.6rem] font-bold leading-[1.05] tracking-tight sm:text-6xl">
               Let in the <span className="text-flag-blue">light</span> on every SK peso and project.
             </h1>

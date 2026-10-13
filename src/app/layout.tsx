@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ORG_NAME } from "@/lib/org";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -8,8 +9,8 @@ const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans", di
 const display = Fraunces({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "Sinag — SK transparency", template: "%s · Sinag" },
-  description: "Sinag brings the Sangguniang Kabataan's projects, schedule, minutes and spending into the light, for every kabataan to see.",
+  title: { default: `Sinag — ${ORG_NAME}`, template: `%s · Sinag` },
+  description: `The projects, schedule, minutes and spending of the ${ORG_NAME}, open for every kabataan to see.`,
 };
 
 // Pages read the session and the database on every request.
