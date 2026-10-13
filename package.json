@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "db:reset-demo": "node scripts/reset-demo.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

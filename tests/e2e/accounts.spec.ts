@@ -10,7 +10,7 @@ const PASSWORD = process.env.SEED_PASSWORD ?? "";
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 }
@@ -26,10 +26,10 @@ test("an official asks for an account, is approved, and can be logged out everyw
 
   // 1. Request
   await page.goto("/request-access");
-  await page.getByLabel("Full name").fill(name);
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Position").selectOption("kagawad");
-  await page.getByLabel("How can the admin confirm it is you?").fill("Elected SK Kagawad, 2023. Ask the Chairperson.");
+  await page.getByLabel("Full name", { exact: true }).fill(name);
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Position", { exact: true }).selectOption("kagawad");
+  await page.getByLabel("How can the admin confirm it is you?", { exact: true }).fill("Elected SK Kagawad, 2023. Ask the Chairperson.");
   await page.getByLabel("Password", { exact: true }).fill("first-password-123");
   await page.locator('input[name="confirm"]').check();
   await page.locator('input[name="privacy"]').check();
@@ -61,8 +61,8 @@ test("an official asks for an account, is approved, and can be logged out everyw
   const second = await secondCtx.newPage();
   await login(second, email, "first-password-123");
   await second.goto("/dashboard/profile");
-  await second.getByLabel("Current password").fill("first-password-123");
-  await second.getByLabel("New password").fill("second-password-456");
+  await second.getByLabel("Current password", { exact: true }).fill("first-password-123");
+  await second.getByLabel("New password", { exact: true }).fill("second-password-456");
   await second.getByRole("button", { name: "Change password" }).click();
   await expect(second.getByRole("status").filter({ hasText: "logged out" })).toBeVisible();
   await page.goto("/dashboard/kagawad");

@@ -71,6 +71,11 @@ jobs:
       - name: Load demo data for the browser tests
         run: bash scripts/ci-step.sh "Demo data" npm run db:seed
 
+      - name: Demo reset works, and refuses outside a demo
+        run: |
+          if npm run db:reset-demo; then echo "::error::db:reset-demo ran without SINAG_STAGE=demo"; exit 1; fi
+          SINAG_STAGE=demo bash scripts/ci-step.sh "Demo reset" npm run db:reset-demo
+
       - name: Install the browser
         run: npx playwright install --with-deps chromium
 
