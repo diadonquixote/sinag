@@ -7,7 +7,6 @@ export type Row = Record<string, any>;
 type Client = ReturnType<typeof postgres>;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __sinagSql: Client | undefined;
 }
 

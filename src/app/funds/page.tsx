@@ -33,7 +33,7 @@ export default async function FundsPage() {
         <Stat label="Still available" tone={f.available < 0 ? "red" : "green"} value={peso(f.available)} />
       </div>
 
-      <div className="mt-14"><SectionHeader as="h3" title="Budget versus spending">How much of each funded project's budget has been used.</SectionHeader></div>
+      <div className="mt-14"><SectionHeader as="h3" title="Budget versus spending">How much of each funded project&rsquo;s budget has been used.</SectionHeader></div>
       {projects.length === 0 ? <Empty>No funded projects yet.</Empty> : (
         <div className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (
