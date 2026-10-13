@@ -2,7 +2,64 @@
 
 **Sinag** means *a ray of light*. It is a transparency web app for Sangguniang Kabataan (SK) councils: kabataan suggest and vote on projects, the council funds and schedules them, and every set of minutes, financial report and project update is posted where the whole barangay can read it.
 
-Built by PDYN Technologies, from a first-hand problem: SK work that happens out of public view. Colors: white with the Philippine flag's blue, red and yellow.
+## Why I built this
+
+I served as secretary of our Sangguniang Kabataan. That is where I learned how easily public
+money becomes invisible.
+
+Not through anything dramatic. Through minutes that stay in a notebook. Through a financial
+report read aloud once at an assembly and never posted anywhere. Through a budget that exists,
+is spent, and is never seen by a single one of the young people it belongs to. By the time
+anyone thinks to ask where the funds went, the records are scattered, the term is ending, and
+the honest answer is that nobody really knows.
+
+I also saw the other half of it, which is quieter and matters just as much. A council of seven
+or eight decides what a whole barangay's youth will get, and the youth find out when the tarpaulin
+goes up. Not because anyone intends to shut them out — because there is no way in. No channel for
+a suggestion, no way to know a decision is being made until it has been made. A council can be
+entirely honest and still leave its constituents with no say and no sight.
+
+The law is not the problem. RA 10742 already requires the SK to practise full public disclosure
+of its transactions and documents, and to answer to the Katipunan ng Kabataan. The problem is
+that there is nowhere for that disclosure to go, and no habit of putting it there.
+
+So Sinag answers both halves. The youth suggest projects and vote on which ones happen, so the
+council's agenda starts with the people it belongs to. Then every step after that is public:
+the proposal, the budget, the schedule, the spending, the receipts, the minutes. Nothing is
+published without the Chairperson approving it, and nothing approved can quietly disappear
+afterwards — ledger entries are voided on the record, never deleted. Every number on the site is
+computed from the ledger in code, so no one can type in a total the entries do not support. The
+AI assistants only ever draft; a person edits and the Chairperson approves before anything is
+seen.
+
+I built it because I wanted it to exist when I was the one keeping those records.
+
+## Where this is going
+
+It starts in one barangay, which is mine. That is deliberate: a transparency tool that has never
+survived contact with a real council, a real budget and a real audit is not worth much.
+
+But nothing in the idea is local. Every youth council, student government, cooperative and small
+public body has the same shape of problem — a small budget, a few officers, real obligations to
+disclose, constituents with no practical way to see or participate. What is specific to the
+Philippines here is the law it is built around and the language it speaks. The rest is not.
+
+So the aim is wider than my barangay, and the path to it is unglamorous: make it work completely
+in one place, for one council, with real money and real scrutiny. Then the next.
+
+This is not a portfolio piece. It is meant to be used.
+
+— Kristina Diane Aviles, built under PDYN Technologies
+
+## A note on the two branches
+
+`main` is the full version, the one described below. `v1` is the half that publishes the public
+record — the calendar, projects, spending, ledger, minutes and council chart — with no public
+sign-up and nothing collected from anyone under 18. v1 deploys first, because the participation
+half needs privacy groundwork under the Data Privacy Act that the disclosure half does not.
+Everything here is where it is going.
+
+Colors: white with the Philippine flag's blue, red and yellow.
 
 ## What it does
 
