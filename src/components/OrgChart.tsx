@@ -2,13 +2,15 @@ import Link from "next/link";
 import Avatar from "./Avatar";
 import type { Row } from "@/lib/db";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
+import { getT, type T } from "@/lib/i18n";
 
 /**
  * The SK organization chart: Chairperson on top, the appointed Secretary and Treasurer,
  * then the Kagawad. Every person links to their public profile.
  * Wide screens get a connected tree; phones get the same groups stacked.
  */
-export default function OrgChart({ people }: { people: Row[] }) {
+export default async function OrgChart({ people }: { people: Row[] }) {
+  const { t } = await getT();
   const chair = people.filter((p) => p.role === "chairperson");
   const officers = people.filter((p) => p.role === "secretary" || p.role === "treasurer");
   const members = people.filter((p) => p.role === "kagawad");
@@ -18,21 +20,21 @@ export default function OrgChart({ people }: { people: Row[] }) {
       {/* ---------------------------------------------------------------- wide screens: connected tree */}
       <div className="relative hidden overflow-x-auto rounded-3xl border border-slate-200 bg-gradient-to-b from-mist/70 to-white px-6 py-10 md:block">
         <div className="mx-auto flex min-w-max flex-col items-center">
-          <Tier people={chair} size="lg" />
+          <Tier people={chair} size="lg" t={t} />
           {(officers.length > 0 || members.length > 0) && <Stem />}
           {officers.length > 0 && (
             <>
-              <TierLabel>Appointed officers</TierLabel>
+              <TierLabel>{t("council.officers")}</TierLabel>
               <Stem short />
-              <Tier people={officers} size="md" trunk={members.length > 0} />
+              <Tier people={officers} size="md" trunk={members.length > 0} t={t} />
               {members.length > 0 && <Stem />}
             </>
           )}
           {members.length > 0 && (
             <>
-              <TierLabel>SK Kagawad</TierLabel>
+              <TierLabel>{t("council.kagawad")}</TierLabel>
               <Stem short />
-              <Tier people={members} size={members.length > 5 ? "sm" : "md"} />
+              <Tier people={members} size={members.length > 5 ? "sm" : "md"} t={t} />
             </>
           )}
         </div>
@@ -41,9 +43,9 @@ export default function OrgChart({ people }: { people: Row[] }) {
       {/* ---------------------------------------------------------------- phones: stacked groups */}
       <div className="space-y-6 md:hidden">
         {[
-          ["Chairperson", chair],
-          ["Appointed officers", officers],
-          ["SK Kagawad", members],
+          [t("council.chair"), chair],
+          [t("council.officers"), officers],
+          [t("council.kagawad"), members],
         ].map(([label, group]) =>
           (group as Row[]).length === 0 ? null : (
             <section key={label as string}>
@@ -79,7 +81,7 @@ function TierLabel({ children }: { children: React.ReactNode }) {
 }
 
 /** One row of the chart. Each person hangs from a shared horizontal line. */
-function Tier({ people, size, trunk = false }: { people: Row[]; size: "lg" | "md" | "sm"; trunk?: boolean }) {
+function Tier({ people, size, trunk = false, t }: { people: Row[]; size: "lg" | "md" | "sm"; trunk?: boolean; t: T }) {
   return (
     <ul className="relative flex justify-center">
       {/* the Kagawad report to the Chairperson, so the main line runs straight past the appointed officers */}
@@ -94,20 +96,20 @@ function Tier({ people, size, trunk = false }: { people: Row[]; size: "lg" | "md
             </>
           )}
           <span aria-hidden="true" className={`absolute left-1/2 top-0 h-6 w-px bg-slate-300 ${people.length > 1 ? "" : "invisible"}`} />
-          <Node p={p} size={size} />
+          <Node p={p} size={size} t={t} />
         </li>
       ))}
     </ul>
   );
 }
 
-function Node({ p, size }: { p: Row; size: "lg" | "md" | "sm" }) {
+function Node({ p, size, t }: { p: Row; size: "lg" | "md" | "sm"; t: T }) {
   const w = size === "lg" ? "w-60" : size === "md" ? "w-48" : "w-40";
   const pic = size === "lg" ? "!h-24 !w-24 text-2xl" : size === "md" ? "!h-16 !w-16 text-lg" : "!h-14 !w-14 text-base";
   return (
     <Link
       href={`/council/${p.id}`}
-      title={`View ${p.name}'s profile`}
+      title={t("council.viewProfile", { name: p.name })}
       className={`group relative z-[1] flex ${w} flex-col items-center rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm transition duration-200 hover:-translate-y-1 hover:border-flag-blue/40 hover:shadow-lg focus-visible:-translate-y-1 ${size === "lg" ? "ring-4 ring-flag-yellow/30" : ""}`}
     >
       <Avatar id={p.id} name={p.name} v={p.avatar_v} size="md" className={`${pic} ring-4 ring-mist transition group-hover:ring-flag-blue/20`} />

@@ -8,9 +8,18 @@ import { categoryStyle, PROJECT_STATUS } from "@/lib/roles";
 import { fmtDateRange, fmtDateTime, peso, pct, todayManila } from "@/lib/format";
 import { fundSummary } from "@/lib/funds";
 import type { Proposal } from "@/lib/types";
+import { getT } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/messages";
 import { approveProject, postUpdate, scheduleProject, updateProposalBudget } from "@/actions/projects";
 
 export const maxDuration = 60;
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const id = Number((await params).id);
+  if (!Number.isInteger(id) || id <= 0) return { title: "Project" };
+  const [p] = await sql<Row[]>`select title from projects where id = ${id} and status <> 'cancelled'`;
+  return { title: p ? p.title : "Project" };
+}
 
 export default async function ProjectPage({
   params,
@@ -32,7 +41,7 @@ export default async function ProjectPage({
     where p.id = ${id} and p.status <> 'cancelled'`;
   if (!p) notFound();
 
-  const user = await currentUser();
+  const [user, { t }] = await Promise.all([currentUser(), getT()]);
   const isChair = user?.role === "chairperson";
   const canUpdate = !!user && ["scheduled", "ongoing", "completed"].includes(p.status) &&
     (user.role === "chairperson" || user.role === "secretary" || user.role === "treasurer" || (user.role === "kagawad" && p.lead_id === user.id));
@@ -46,58 +55,59 @@ export default async function ProjectPage({
     isChair && p.status === "proposed" ? fundSummary() : Promise.resolve(null),
   ]);
 
-  const st = PROJECT_STATUS[p.status] ?? PROJECT_STATUS.proposed;
+  const statusKey = PROJECT_STATUS[p.status] ? (p.status as string) : "proposed";
+  const st = PROJECT_STATUS[statusKey];
   const proposal = p.proposal as Proposal | null;
 
   return (
     <div className="container-x py-10 sm:py-12">
-      <Link href="/projects" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>All projects</Link>
+      <Link href="/projects" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-flag-blue"><span aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5">←</span>{t("project.all")}</Link>
       <div className="mt-4"><Flash sp={sp} /></div>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge className={st.className}>{st.label}</Badge>
+        <Badge className={st.className}>{t(`status.${statusKey}` as MessageKey)}</Badge>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${categoryStyle(p.category).chip}`}>{p.category}</span>
       </div>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{p.title}</h1>
-      <p className="mt-2 text-slate-600">{fmtDateRange(p.start_date, p.end_date)}{p.location ? ` · ${p.location}` : ""}</p>
-      {p.lead_name && <p className="mt-1 text-sm text-slate-500">Point person: <Link href={`/council/${p.lead_id}`} className="font-semibold text-flag-blue hover:underline">{p.lead_name}</Link></p>}
+      <p className="mt-2 text-slate-600">{p.start_date ? fmtDateRange(p.start_date, p.end_date) : t("project.tba")}{p.location ? ` · ${p.location}` : ""}</p>
+      {p.lead_name && <p className="mt-1 text-sm text-slate-500">{t("project.lead")} <Link href={`/council/${p.lead_id}`} className="font-semibold text-flag-blue hover:underline">{p.lead_name}</Link></p>}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
           <section className="card">
-            <h2 className="text-lg font-bold">About this project</h2>
+            <h2 className="text-lg font-bold">{t("project.about")}</h2>
             <p className="mt-2 whitespace-pre-line text-slate-700">{p.description}</p>
           </section>
 
           {proposal && (
             <section className="card space-y-4">
-              <h2 className="text-lg font-bold">Proposal</h2>
-              {proposal.template && <p className="rounded-lg bg-yellow-50 px-3 py-2 text-xs text-yellow-900">This is a generic template. The figures will be updated with real quotes.</p>}
-              <p className="text-sm text-slate-700"><b>Who benefits:</b> {proposal.beneficiaries} · <b>Duration:</b> {proposal.duration}</p>
-              {proposal.objectives?.length > 0 && <div><h3 className="font-bold">Objectives</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.objectives.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
-              {proposal.activities?.length > 0 && <div><h3 className="font-bold">Activities</h3><ul className="mt-1 space-y-1 text-sm text-slate-700">{proposal.activities.map((a, i) => <li key={i}><b>{a.name}.</b> {a.description}</li>)}</ul></div>}
+              <h2 className="text-lg font-bold">{t("project.proposal")}</h2>
+              {proposal.template && <p className="rounded-lg bg-yellow-50 px-3 py-2 text-xs text-yellow-900">{t("project.template")}</p>}
+              <p className="text-sm text-slate-700"><b>{t("project.beneficiaries")}</b> {proposal.beneficiaries} · <b>{t("project.duration")}</b> {proposal.duration}</p>
+              {proposal.objectives?.length > 0 && <div><h3 className="font-bold">{t("project.objectives")}</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.objectives.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
+              {proposal.activities?.length > 0 && <div><h3 className="font-bold">{t("project.activities")}</h3><ul className="mt-1 space-y-1 text-sm text-slate-700">{proposal.activities.map((a, i) => <li key={i}><b>{a.name}.</b> {a.description}</li>)}</ul></div>}
               {proposal.budget_lines?.length > 0 && (
-                <div className="relative overflow-x-auto"><h3 className="font-bold">Budget breakdown</h3>
+                <div className="relative overflow-x-auto"><h3 className="font-bold">{t("project.breakdown")}</h3>
                   <table className="mt-2 w-full min-w-[420px] text-sm">
-                    <thead><tr className="border-b border-slate-200 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-2">Item</th><th>Qty</th><th>Unit cost</th><th className="text-right">Total</th></tr></thead>
+                    <thead><tr className="border-b border-slate-200 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500"><th className="py-2">{t("project.item")}</th><th>{t("project.qty")}</th><th>{t("project.unitCost")}</th><th className="text-right">{t("project.total")}</th></tr></thead>
                     <tbody>{proposal.budget_lines.map((b, i) => (
                       <tr key={i} className="border-b border-slate-100"><td className="py-2">{b.item}</td><td>{b.qty} {b.unit}</td><td>{peso(b.unit_cost)}</td><td className="text-right font-semibold tabular-nums">{peso(b.qty * b.unit_cost)}</td></tr>
                     ))}</tbody>
-                    <tfoot><tr><td colSpan={3} className="pt-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Total</td><td className="pt-2 text-right font-bold tabular-nums text-ink">{peso(proposal.budget_lines.reduce((sum, b) => sum + b.qty * b.unit_cost, 0))}</td></tr></tfoot>
+                    <tfoot><tr><td colSpan={3} className="pt-2 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">{t("project.total")}</td><td className="pt-2 text-right font-bold tabular-nums text-ink">{peso(proposal.budget_lines.reduce((sum, b) => sum + b.qty * b.unit_cost, 0))}</td></tr></tfoot>
                   </table>
                 </div>
               )}
-              {proposal.expected_outcomes?.length > 0 && <div><h3 className="font-bold">Expected outcomes</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.expected_outcomes.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
-              {proposal.risks?.length > 0 && <div><h3 className="font-bold">Risks</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.risks.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
+              {proposal.expected_outcomes?.length > 0 && <div><h3 className="font-bold">{t("project.outcomes")}</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.expected_outcomes.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
+              {proposal.risks?.length > 0 && <div><h3 className="font-bold">{t("project.risks")}</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">{proposal.risks.map((o, i) => <li key={i}>{o}</li>)}</ul></div>}
             </section>
           )}
 
           <section className="card">
-            <h2 className="text-lg font-bold">Updates</h2>
-            {updates.length === 0 ? <p className="mt-2 text-sm text-slate-500">No updates yet.</p> : (
+            <h2 className="text-lg font-bold">{t("project.updates")}</h2>
+            {updates.length === 0 ? <p className="mt-2 text-sm text-slate-500">{t("project.noUpdates")}</p> : (
               <ol className="mt-4 space-y-4 border-l-2 border-flag-yellow pl-4">
                 {updates.map((u, i) => (
                   <li key={i}>
-                    <p className="text-xs text-slate-500">{fmtDateTime(u.created_at)}{u.name ? ` · ${u.name}` : ""}{u.progress != null ? ` · ${u.progress}% done` : ""}</p>
+                    <p className="text-xs text-slate-500">{fmtDateTime(u.created_at)}{u.name ? ` · ${u.name}` : ""}{u.progress != null ? ` · ${t("project.done", { n: u.progress })}` : ""}</p>
                     <p className="mt-1 whitespace-pre-line text-slate-700">{u.body}</p>
                   </li>
                 ))}
@@ -120,14 +130,14 @@ export default async function ProjectPage({
         <aside className="order-first min-w-0 space-y-6 lg:order-none">
           <section className="card space-y-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Budget</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t("project.budget")}</p>
               <p className="mt-1 font-display text-3xl font-bold leading-none text-ink tabular-nums">{peso(p.budget)}</p>
             </div>
-            <ProgressBar value={pct(p.spent, p.budget)} label={`${peso(p.spent)} spent`} />
-            {["scheduled", "ongoing", "completed"].includes(p.status) && <ProgressBar value={p.progress} label="Work done" />}
+            <ProgressBar value={pct(p.spent, p.budget)} label={t("project.spent", { amount: peso(p.spent) })} />
+            {["scheduled", "ongoing", "completed"].includes(p.status) && <ProgressBar value={p.progress} label={t("project.workDone")} />}
             {spendLines.length > 0 && (
               <div className="border-t border-slate-100 pt-4">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Spending</p>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t("project.spending")}</p>
                 <ul className="space-y-2 text-sm">
                   {spendLines.map((s, i) => (
                     <li key={i} className="flex justify-between gap-3">
@@ -135,7 +145,7 @@ export default async function ProjectPage({
                         <span className="block text-xs text-slate-400">
                           {s.reference ?? ""}
                           {(s.receipts as number[]).map((rid, n) => (
-                            <a key={rid} href={`/api/receipt/${rid}`} target="_blank" rel="noreferrer" className="ml-1 font-semibold text-flag-blue hover:underline first:ml-0">{s.reference || n > 0 ? " · " : ""}Receipt{(s.receipts as number[]).length > 1 ? ` ${n + 1}` : ""}</a>
+                            <a key={rid} href={`/api/receipt/${rid}`} target="_blank" rel="noreferrer" className="ml-1 font-semibold text-flag-blue hover:underline first:ml-0">{s.reference || n > 0 ? " · " : ""}{t("project.receipt")}{(s.receipts as number[]).length > 1 ? ` ${n + 1}` : ""}</a>
                           ))}
                         </span>
                       </span>
@@ -145,7 +155,7 @@ export default async function ProjectPage({
                 </ul>
               </div>
             )}
-            <Link href="/funds" className="block border-t border-slate-100 pt-3 text-xs font-semibold text-flag-blue hover:underline">See the full ledger →</Link>
+            <Link href="/funds" className="block border-t border-slate-100 pt-3 text-xs font-semibold text-flag-blue hover:underline">{t("project.ledger")} →</Link>
           </section>
 
           {isChair && p.status === "proposed" && funds && (

@@ -4,12 +4,16 @@ import { ROLE_LABEL, type Role } from "@/lib/roles";
 import { Empty, PageHeader } from "@/components/ui";
 import { sql, type Row } from "@/lib/db";
 import { ORG_NAME } from "@/lib/org";
+import { getT } from "@/lib/i18n";
 
-export const metadata = { title: "SK council" };
+export async function generateMetadata() {
+  const { t } = await getT();
+  return { title: t("council.title") };
+}
 
 /** Public page: the organization chart of the SK. Each person links to their profile. */
 export default async function CouncilPage() {
-  const [people, former] = await Promise.all([
+  const [people, former, { t }] = await Promise.all([
     sql<Row[]>`
       select id, name, role, committee, extract(epoch from avatar_updated_at)::bigint::text as avatar_v
       from users where role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'
@@ -18,18 +22,17 @@ export default async function CouncilPage() {
       select id, name, role, term from users
       where role in ('chairperson','secretary','treasurer','kagawad') and status = 'former'
       order by term desc nulls last, case role when 'chairperson' then 0 when 'secretary' then 1 when 'treasurer' then 2 else 3 end, name`,
+    getT(),
   ]);
 
   return (
     <div className="container-x py-10 sm:py-12">
-      <PageHeader eyebrow="SK council" title="The people you elected">
-        The {ORG_NAME} and who does what. Tap anyone in the chart to see their credentials, their contributions to the council, and the projects they lead.
-      </PageHeader>
-      {people.length === 0 ? <Empty>The council has not been set up yet.</Empty> : <OrgChart people={people} />}
+      <PageHeader eyebrow={t("council.title")} title={t("council.heading")}>{t("council.lead", { org: ORG_NAME })}</PageHeader>
+      {people.length === 0 ? <Empty>{t("council.empty")}</Empty> : <OrgChart people={people} />}
       {former.length > 0 && (
         <section className="mt-12" aria-labelledby="former-h">
-          <h2 id="former-h" className="text-xl font-bold">Former officials</h2>
-          <p className="mt-1 text-sm text-slate-500">Their terms have ended. What they published while in office stays on the record.</p>
+          <h2 id="former-h" className="text-xl font-bold">{t("council.former")}</h2>
+          <p className="mt-1 text-sm text-slate-500">{t("council.formerLead")}</p>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {former.map((f) => (
               <li key={f.id}>

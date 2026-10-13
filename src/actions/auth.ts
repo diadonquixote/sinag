@@ -8,7 +8,8 @@ import { PRIVACY_VERSION } from "@/lib/privacy";
 import { back } from "@/lib/flash";
 import { audit } from "@/lib/audit";
 import { OFFICIAL_ROLES, ROLE_HOME, type Role } from "@/lib/roles";
-import { clearLoginAttempts, clientAddress, loginBlockedMessage, noteRequest, recordFailedLogin, tooManyRequests } from "@/lib/rate-limit";
+import { clearLoginAttempts, clientAddress, loginBlockedMinutes, noteRequest, recordFailedLogin, tooManyRequests } from "@/lib/rate-limit";
+import { getT } from "@/lib/i18n";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,12 +18,13 @@ let dummyHash: string | null = null;
 export async function login(fd: FormData): Promise<void> {
   const email = String(fd.get("email") ?? "").trim().toLowerCase();
   const password = String(fd.get("password") ?? "");
-  if (!email || !password) back("/login", "err", "Enter your email and password.");
+  const { t } = await getT();
+  if (!email || !password) back("/login", "err", t("auth.missing"));
 
   // Stop password guessing before doing any work on the attempt.
   const address = await clientAddress();
-  const blocked = await loginBlockedMessage(email, address);
-  if (blocked) back("/login", "err", blocked);
+  const wait = await loginBlockedMinutes(email, address);
+  if (wait !== null) back("/login", "err", t("auth.blocked", { n: wait }));
 
   const rows = await sql<Row[]>`select id, name, role, status, session_version, password_hash from users where lower(email) = ${email}`;
   const user = rows[0];
@@ -32,13 +34,13 @@ export async function login(fd: FormData): Promise<void> {
   const ok = await bcrypt.compare(password, user ? (user.password_hash as string) : (dummyHash as string));
   if (!user || !ok) {
     await recordFailedLogin(email, address);
-    back("/login", "err", "Wrong email or password.");
+    back("/login", "err", t("auth.wrong"));
   }
 
   await clearLoginAttempts(email, address);
   // Only said after the right password, so this never tells a stranger who has an account.
-  if (user.status === "pending") back("/login", "err", "Your account is waiting for the site admin to approve it. You will be able to log in once they do.");
-  if (user.status !== "active") back("/login", "err", "This account is not active. Please contact the site admin.");
+  if (user.status === "pending") back("/login", "err", t("auth.pending"));
+  if (user.status !== "active") back("/login", "err", t("auth.inactive"));
   await createSession({ id: user.id as number, name: user.name as string, role: user.role as Role, sessionVersion: Number(user.session_version) });
   redirect("/dashboard");
 }
@@ -59,20 +61,21 @@ export async function requestAccess(fd: FormData): Promise<void> {
   const role = String(fd.get("role") ?? "") as Role;
   const note = String(fd.get("note") ?? "").trim();
   const password = String(fd.get("password") ?? "");
+  const { t } = await getT();
 
-  if (name.length < 2) back(path, "err", "Enter your full name as it appears on the list of elected officials.");
-  if (!EMAIL.test(email)) back(path, "err", "Enter a valid email address.");
-  if (!OFFICIAL_ROLES.includes(role)) back(path, "err", "Choose your position.");
-  if (note.length < 5) back(path, "err", "Tell the admin how to confirm it is you.");
-  if (password.length < 8) back(path, "err", "Use a password with at least 8 characters.");
-  if (fd.get("confirm") !== "on") back(path, "err", "Please confirm that you are an elected SK official.");
-  if (fd.get("privacy") !== "on") back(path, "err", "Please read and agree to the privacy notice before sending your request.");
+  if (name.length < 2) back(path, "err", t("req.name"));
+  if (!EMAIL.test(email)) back(path, "err", t("req.email"));
+  if (!OFFICIAL_ROLES.includes(role)) back(path, "err", t("req.position"));
+  if (note.length < 5) back(path, "err", t("req.note"));
+  if (password.length < 8) back(path, "err", t("req.password"));
+  if (fd.get("confirm") !== "on") back(path, "err", t("req.confirm"));
+  if (fd.get("privacy") !== "on") back(path, "err", t("req.privacy"));
 
   const address = await clientAddress();
-  if (await tooManyRequests(address)) back(path, "err", "Too many requests from this connection. Please try again in an hour.");
+  if (await tooManyRequests(address)) back(path, "err", t("req.tooMany"));
 
   const existing = await sql<Row[]>`select 1 as x from users where lower(email) = ${email}`;
-  if (existing.length > 0) back(path, "err", "That email already has an account or a request waiting. Log in, or contact the site admin.");
+  if (existing.length > 0) back(path, "err", t("req.exists"));
 
   const hash = await bcrypt.hash(password, 10);
   const [created] = await sql<Row[]>`
@@ -82,7 +85,7 @@ export async function requestAccess(fd: FormData): Promise<void> {
   `;
   await noteRequest(address);
   await audit(created.id as number, "requested an account", "user", created.id as number, `${name} (${role})`);
-  back("/login", "ok", "Request sent. The site admin will check it against the list of elected officials. You can log in once it is approved.");
+  back("/login", "ok", t("req.sent"));
 }
 
 /** Officials can change their own password. */
@@ -111,7 +114,8 @@ export async function logoutEverywhere(): Promise<void> {
   await revokeSessions(user.id);
   await audit(user.id, "logged out everywhere", "user", user.id);
   await destroySession();
-  back("/login", "ok", "You have been logged out on every device. Log in again to continue.");
+  const { t } = await getT();
+  back("/login", "ok", t("auth.loggedOutEverywhere"));
 }
 
 /** Records that an official has read the privacy notice (accounts the admin created never saw the request form). */
