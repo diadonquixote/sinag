@@ -88,19 +88,20 @@ export default async function AboutPage() {
             <div className="mt-3 space-y-3 leading-relaxed text-slate-700">
               {fil ? (
                 <>
-                  <p>Ang <b>PDYN Technologies</b> (Padayon Tech) ay isang technology startup sa Pilipinas, na pinamumunuan ng CEO nito na si <b>Kristina Diane Aviles</b>. Gumagawa ito ng software para sa mga problemang nakikita mismo nito sa komunidad.</p>
-                  <p>Dati siyang secretary ng Sangguniang Kabataan. Doon niya nakita kung gaano kadaling hindi makita ng publiko ang perang pampubliko, at kung gaano kaunti ang paraan ng kabataan para makita ang pinagpapasyahan para sa kanila. Ginawa ang Sinag para doon.</p>
+                  <p>Ang <b>PDYN Technologies</b> (Padayon Tech) ay isang technology startup sa Pilipinas, na pinamumunuan ng CEO nito na si <b>Kristina Diane Aviles</b>. Gumagawa ito ng praktikal na software para sa mga komunidad at lokal na institusyon, na may pokus sa pagiging bukas, malinaw at madaling gamitin.</p>
+                  <p>Ang Sinag ay isa sa mga produkto ng PDYN: isang pampublikong talaan para sa mga Sangguniang Kabataan, na bukas na source code at maaaring suriin ng sinuman.</p>
                   <p>Ang PDYN ang gumagawa at nagpapatakbo ng site. Ang konseho ang nagpapasya kung ano ang inilalathala, at ito ang may pananagutan sa nilalaman.</p>
                 </>
               ) : (
                 <>
-                  <p><b>PDYN Technologies</b> (Padayon Tech) is a technology startup in the Philippines, led by its CEO, <b>Kristina Diane Aviles</b>. It builds software for problems it has seen first-hand in the community.</p>
-                  <p>She served as secretary of a Sangguniang Kabataan. That is where she saw how easily public money goes unseen, and how few ways the youth have to see what is decided for them. Sinag was built for that.</p>
+                  <p><b>PDYN Technologies</b> (Padayon Tech) is a technology startup in the Philippines, led by its CEO, <b>Kristina Diane Aviles</b>. It builds practical software for communities and local institutions, with a focus on openness, clarity and ease of use.</p>
+                  <p>Sinag is one of PDYN&apos;s products: a public record for Sangguniang Kabataan councils, with open source code anyone can inspect.</p>
                   <p>PDYN builds and runs the site. The council decides what is published, and is responsible for what it says.</p>
                 </>
               )}
               <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 <a href={`mailto:${PDYN_EMAIL}`} className="font-semibold text-flag-blue underline">{PDYN_EMAIL}</a>
+                <a href="https://www.facebook.com/profile.php?id=61595269470373" className="font-semibold text-flag-blue underline" rel="noreferrer">Facebook</a>
                 <a href="https://github.com/diadonquixote" className="font-semibold text-flag-blue underline" rel="noreferrer">GitHub</a>
               </p>
             </div>
