@@ -65,16 +65,51 @@ records through them.
 
 ## Deploy to Vercel
 
-1. Create a free Postgres database (Neon or Supabase) and run `npm run db:setup` against it (set `DATABASE_URL` in your shell first).
-2. Import this GitHub repo in Vercel.
-3. Add the environment variables above in Project Settings.
-4. Deploy. AI pages allow up to 60 seconds. Photos are resized in the browser to stay under Vercel's 4.5 MB request limit.
+1. Create a Postgres database (Neon or Supabase) for the real council. Keep it separate
+   from the one you develop against.
+2. Point `DATABASE_URL` at it in your shell and run **`npm run db:setup`**.
+   Run `db:setup`, never `db:seed` — the demo accounts must not exist on a live site.
+3. Create the first Chairperson with **`npm run db:chair`**. Nothing else can:
+   public sign-up only ever creates kabataan accounts, and "Add official" needs a
+   chairperson to already exist. Without this step the live site has no way in.
+4. Import this GitHub repo in Vercel and add the environment variables above in
+   Project Settings. A missing variable builds fine and fails at runtime, so check them twice.
+5. Deploy, then log in as the Chairperson and add the rest of the council from the Team page.
 
-Vercel's Hobby plan is for non-commercial use, so move to a paid plan if the app is used for real SK operations.
+AI pages allow up to 60 seconds. Photos are resized in the browser to stay under Vercel's
+4.5 MB request limit. Vercel's Hobby plan is for non-commercial use, so move to a paid plan
+if the app is used for real SK operations.
+
+### Before real data goes in
+
+- **Turn on backups** in Neon or Supabase. The ledger is append-only, which protects you from
+  bad edits but not from a lost database.
+- **Set `NEXT_PUBLIC_ORG_NAME`** to your barangay, not the default.
+- **Walk one full cycle** with real data: idea, poll, proposal, budget, schedule, update,
+  receipt, report. That is where the awkward parts show up.
+- **Try it on a phone**, with the camera, not just a narrow browser window. Most kabataan
+  will only ever see this on a phone.
+- **Never commit `.env.local`.** It is already in `.gitignore`. If a key or password is ever
+  pasted into a chat, a screenshot or a commit, replace it rather than hoping.
+
+## Looking after it
+
+| Command | What it does |
+| --- | --- |
+| `npm run db:setup` | Creates or updates tables. Safe to re-run; never deletes data. Run after every `git pull` |
+| `npm run db:chair` | Creates the first Chairperson, or promotes an existing account |
+| `npm run db:seed` | Demo data. Local only — never on a live site |
+| `npm run db:passwords` | Resets the demo accounts to `SEED_PASSWORD` |
+
+Repeated wrong passwords lock sign-in for about 15 minutes, counted per email address and per
+internet address, so a password cannot be guessed endlessly. A correct password clears the
+count, so an ordinary typo costs nothing. If someone is locked out and in a hurry, the
+Chairperson can set them a new password from the Team page.
 
 ## Stack
 
-Next.js 15 (App Router, server actions), React 19, TypeScript, Tailwind CSS, Postgres (`postgres`), `jose` + `bcryptjs` for sessions, Nebius Token Factory (OpenAI-compatible) with NVIDIA Nemotron models.
+Next.js 15 (App Router, server actions), React 19, TypeScript, Tailwind CSS, Postgres (`postgres`),
+`jose` + `bcryptjs` for sessions, and any OpenAI-compatible AI provider (Gemini by default).
 
 ## Honest status
 

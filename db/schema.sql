@@ -193,3 +193,12 @@ create table if not exists audit_log (
   created_at timestamptz not null default now()
 );
 create index if not exists audit_log_created_idx on audit_log (created_at desc);
+
+-- Failed logins, so a password cannot be guessed endlessly.
+-- Rows are counted inside a short window and cleared the moment a login succeeds.
+create table if not exists login_attempts (
+  id serial primary key,
+  scope text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists login_attempts_scope_idx on login_attempts (scope, created_at desc);

@@ -7,6 +7,7 @@ import { createSession, destroySession, requireRole } from "@/lib/auth";
 import { back } from "@/lib/flash";
 import { audit } from "@/lib/audit";
 import { OFFICIAL_ROLES, type Role } from "@/lib/roles";
+import { clearLoginAttempts, clientAddress, loginBlockedMessage, recordFailedLogin } from "@/lib/rate-limit";
 
 let dummyHash: string | null = null;
 
@@ -15,14 +16,23 @@ export async function login(fd: FormData): Promise<void> {
   const password = String(fd.get("password") ?? "");
   if (!email || !password) back("/login", "err", "Enter your email and password.");
 
+  // Stop password guessing before doing any work on the attempt.
+  const address = await clientAddress();
+  const blocked = await loginBlockedMessage(email, address);
+  if (blocked) back("/login", "err", blocked);
+
   const rows = await sql<Row[]>`select id, name, role, password_hash from users where lower(email) = ${email}`;
   const user = rows[0];
 
   // Compare against a dummy hash when the email is unknown so timing does not reveal which emails exist.
   if (!user) dummyHash ??= bcrypt.hashSync("sinag-dummy-password", 10);
   const ok = await bcrypt.compare(password, user ? (user.password_hash as string) : (dummyHash as string));
-  if (!user || !ok) back("/login", "err", "Wrong email or password.");
+  if (!user || !ok) {
+    await recordFailedLogin(email, address);
+    back("/login", "err", "Wrong email or password.");
+  }
 
+  await clearLoginAttempts(email, address);
   await createSession({ id: user.id as number, name: user.name as string, role: user.role as Role });
   redirect("/dashboard");
 }

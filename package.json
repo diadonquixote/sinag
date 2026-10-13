@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "db:setup": "node scripts/db-setup.mjs",
     "db:seed": "node scripts/db-setup.mjs --seed",
-    "db:passwords": "node scripts/reset-demo-passwords.mjs"
+    "db:passwords": "node scripts/reset-demo-passwords.mjs",
+    "db:chair": "node scripts/make-chair.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
