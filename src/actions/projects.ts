@@ -104,7 +104,7 @@ export async function scheduleProject(fd: FormData): Promise<void> {
   if (end < start) back(path, "err", "The end date cannot be before the start date.");
   if (location.length < 3) back(path, "err", "Where will it happen?");
 
-  const [lead] = await sql<Row[]>`select id, role from users where id = ${leadId}`;
+  const [lead] = await sql<Row[]>`select id, role from users where id = ${leadId} and status = 'active'`;
   if (!lead || !isOfficial(lead.role as string)) back(path, "err", "Choose an SK official as the point person.");
 
   const [project] = await sql<Row[]>`select title, status from projects where id = ${id}`;

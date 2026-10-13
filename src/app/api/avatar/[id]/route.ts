@@ -1,5 +1,5 @@
 import { sql, type Row } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { isOfficial } from "@/lib/roles";
 
 /**
@@ -11,12 +11,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) return new Response("Not found", { status: 404 });
 
-  const [row] = await sql<Row[]>`select role, avatar, avatar_type from users where id = ${id} and avatar is not null`;
+  const [row] = await sql<Row[]>`select role, status, avatar, avatar_type from users where id = ${id} and avatar is not null`;
   if (!row) return new Response("Not found", { status: 404 });
 
-  const publicPhoto = isOfficial(row.role as string);
+  const publicPhoto = isOfficial(row.role as string) && row.status === "active";
   if (!publicPhoto) {
-    const viewer = await getSession();
+    const viewer = await currentUser();
     if (!viewer || (viewer.id !== id && !isOfficial(viewer.role))) return new Response("Not found", { status: 404 });
   }
 

@@ -1,6 +1,13 @@
-export type Role = "chairperson" | "secretary" | "treasurer" | "kagawad" | "kabataan";
+export type Role = "chairperson" | "secretary" | "treasurer" | "kagawad" | "kabataan" | "admin";
 
+/**
+ * The elected positions. These are the people shown on the public council page.
+ * The site admin is deliberately not one of them: it lets people in, but it is not an office.
+ */
 export const OFFICIAL_ROLES: Role[] = ["chairperson", "secretary", "treasurer", "kagawad"];
+
+/** Every role the site admin can give an account. */
+export const ASSIGNABLE_ROLES: Role[] = ["chairperson", "secretary", "treasurer", "kagawad", "admin"];
 
 export const ROLE_LABEL: Record<Role, string> = {
   chairperson: "SK Chairperson",
@@ -8,6 +15,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   treasurer: "SK Treasurer",
   kagawad: "SK Kagawad",
   kabataan: "Kabataan",
+  admin: "Site admin",
 };
 
 export function isOfficial(role: string): boolean {
@@ -21,6 +29,7 @@ export const ROLE_HOME: Record<Role, string> = {
   treasurer: "/dashboard/treasurer",
   kagawad: "/dashboard/kagawad",
   kabataan: "/",   // v1 has no kabataan desk; see README
+  admin: "/dashboard/admin",
 };
 
 export const CATEGORIES = [
@@ -72,4 +81,10 @@ export const DOC_STATUS: Record<string, { label: string; className: string }> = 
   draft: { label: "Draft", className: "bg-slate-100 text-slate-700 ring-slate-200" },
   pending: { label: "Waiting for approval", className: "bg-yellow-50 text-yellow-800 ring-yellow-200" },
   published: { label: "Published", className: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
+};
+
+export const ACCOUNT_STATUS: Record<string, { label: string; className: string }> = {
+  pending: { label: "Waiting for approval", className: "bg-yellow-50 text-yellow-800 ring-yellow-200" },
+  active: { label: "Active", className: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
+  disabled: { label: "Turned off", className: "bg-slate-100 text-slate-700 ring-slate-200" },
 };

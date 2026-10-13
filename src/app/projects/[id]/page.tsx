@@ -42,7 +42,7 @@ export default async function ProjectPage({
     sql<Row[]>`select t.tx_date::text as tx_date, t.description, t.amount::float8 as amount, t.reference,
                  coalesce((select array_agg(r.id order by r.id) from transaction_receipts r where r.transaction_id = t.id and r.is_public), '{}') as receipts
                from transactions t where t.project_id = ${id} and t.kind = 'expense' and t.voided_at is null order by t.tx_date desc, t.id desc`,
-    isChair ? sql<Row[]>`select id, name, role from users where role <> 'kabataan' order by name` : Promise.resolve([] as Row[]),
+    isChair ? sql<Row[]>`select id, name, role from users where role in ('chairperson','secretary','treasurer','kagawad') and status = 'active' order by name` : Promise.resolve([] as Row[]),
     isChair && p.status === "proposed" ? fundSummary() : Promise.resolve(null),
   ]);
 

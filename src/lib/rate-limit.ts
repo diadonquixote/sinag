@@ -50,7 +50,7 @@ export async function loginBlockedMessage(email: string, address: string): Promi
     const limit = scope.startsWith("email:") ? MAX_PER_EMAIL : MAX_PER_ADDRESS;
     if (Number(row.tries) >= limit) {
       const wait = minutesLeft(new Date(row.oldest as string | Date));
-      return `Too many failed sign-in attempts. Please wait about ${wait} minute${wait === 1 ? "" : "s"} and try again. If you have forgotten your password, ask the Chairperson to reset it.`;
+      return `Too many failed sign-in attempts. Please wait about ${wait} minute${wait === 1 ? "" : "s"} and try again. If you have forgotten your password, ask the site admin to reset it.`;
     }
   }
   return null;
@@ -75,5 +75,28 @@ export async function clearLoginAttempts(email: string, address: string): Promis
     await sql`delete from login_attempts where scope = any(${scopes})`;
   } catch {
     // Not worth failing a successful login over.
+  }
+}
+
+/**
+ * Account requests, counted per connection in the same table, so the request form
+ * cannot be used to flood the admin's approval list.
+ */
+const MAX_REQUESTS_PER_HOUR = 5;
+
+export async function tooManyRequests(address: string): Promise<boolean> {
+  if (!address) return false;
+  const [row] = await sql<Row[]>`
+    select count(*)::int as n from login_attempts
+    where scope = ${`request:${address}`} and created_at > now() - interval '1 hour'`;
+  return Number(row?.n ?? 0) >= MAX_REQUESTS_PER_HOUR;
+}
+
+export async function noteRequest(address: string): Promise<void> {
+  if (!address) return;
+  try {
+    await sql`insert into login_attempts (scope) values (${`request:${address}`})`;
+  } catch {
+    // Bookkeeping only.
   }
 }

@@ -7,7 +7,7 @@ create table if not exists users (
   name text not null,
   email text not null,
   password_hash text not null,
-  role text not null check (role in ('chairperson','secretary','treasurer','kagawad','kabataan')),
+  role text not null check (role in ('chairperson','secretary','treasurer','kagawad','kabataan','admin')),
   barangay text,
   created_at timestamptz not null default now()
 );
@@ -25,6 +25,22 @@ alter table users add column if not exists avatar_updated_at timestamptz;
 alter table users add column if not exists term text;                -- officials: e.g. "2023 to 2026"
 alter table users add column if not exists credentials text;         -- officials: education, trainings, awards (one per line)
 alter table users add column if not exists contributions text;       -- officials: what they did for the council (one per line)
+
+-- Site admin and account approval. Officials can ask for an account themselves; it stays
+-- 'pending' until the site admin checks them against the list of elected officials.
+-- A turned-down request is deleted; 'disabled' is an approved account the admin switched off.
+-- The role check is dropped and re-added so databases created before 'admin' existed accept it.
+alter table users drop constraint if exists users_role_check;
+alter table users add constraint users_role_check
+  check (role in ('chairperson','secretary','treasurer','kagawad','kabataan','admin'));
+alter table users add column if not exists status text not null default 'active';
+alter table users drop constraint if exists users_status_check;
+alter table users add constraint users_status_check
+  check (status in ('pending','active','disabled'));
+alter table users add column if not exists request_note text;       -- what they wrote so the admin can confirm who they are
+alter table users add column if not exists reviewed_by int references users(id) on delete set null;
+alter table users add column if not exists reviewed_at timestamptz;
+create index if not exists users_status_idx on users (status, created_at);
 
 create table if not exists settings (
   key text primary key,

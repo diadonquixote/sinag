@@ -56,15 +56,16 @@ export async function getSession(): Promise<SessionUser | null> {
 }
 
 /**
- * Authoritative check: reads the user from the database so a changed role or
- * a removed account takes effect immediately. Use this for every protected page and action.
+ * Authoritative check: reads the user from the database so a changed role, a turned-off
+ * account or a removed one takes effect immediately. Use this for every protected page and action.
  */
 export async function requireRole(...roles: Role[]): Promise<SessionUser> {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const rows = await sql<Row[]>`select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users where id = ${session.id}`;
+  const rows = await sql<Row[]>`select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users where id = ${session.id} and status = 'active'`;
   const user = rows[0];
+  // A removed, turned-off or not-yet-approved account is treated as logged out.
   if (!user) redirect("/login");
 
   if (roles.length > 0 && !roles.includes(user.role as Role)) redirect("/dashboard");
@@ -75,7 +76,7 @@ export async function requireRole(...roles: Role[]): Promise<SessionUser> {
 export async function currentUser(): Promise<SessionUser | null> {
   const session = await getSession();
   if (!session) return null;
-  const rows = await sql<Row[]>`select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users where id = ${session.id}`;
+  const rows = await sql<Row[]>`select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users where id = ${session.id} and status = 'active'`;
   const user = rows[0];
   if (!user) return null;
   return { id: user.id as number, name: user.name as string, role: user.role as Role, avatarV: (user.avatar_v as string | null) ?? null };

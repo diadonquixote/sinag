@@ -16,6 +16,7 @@ const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
   treasurer: [{ href: "/dashboard/treasurer", label: "Finance assistant" }],
   kagawad: [{ href: "/dashboard/kagawad", label: "My projects" }],
   kabataan: [],   // v1 has no kabataan desk
+  admin: [{ href: "/dashboard/admin", label: "Accounts" }],
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const withDocs = tabs.map((t) =>
     t.href === "/dashboard/secretary" ? { ...t, also: "/dashboard/minutes" } : t.href === "/dashboard/treasurer" ? { ...t, also: "/dashboard/reports" } : t,
   );
-  const missing = [!user.avatarV && "a photo", !me?.bio && "a short bio", !me?.purok && "your purok"].filter(Boolean) as string[];
+  const missing = user.role === "admin" ? [] : [!user.avatarV && "a photo", !me?.bio && "a short bio", !me?.purok && "your purok"].filter(Boolean) as string[];
   return (
     <>
       <div className="border-b border-slate-200 bg-gradient-to-b from-mist to-white">

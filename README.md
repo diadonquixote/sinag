@@ -54,7 +54,7 @@ RA 10742 already requires the SK to disclose its transactions and documents of p
 v1 is a way of keeping that promise. Everything in it is information the council is obliged to
 publish anyway.
 
-**Deliberately not in v1:** public sign-up, the youth idea box, polls and voting, volunteering,
+**Deliberately not in v1:** sign-up for kabataan (only elected officials can ask for an account, and the site admin approves each one), the youth idea box, polls and voting, volunteering,
 and kabataan accounts. Those collect personal data from people who may be under 18, which brings
 duties under the Data Privacy Act — a privacy notice, a child privacy impact assessment, erasure
 and export. They come back in v2, once that groundwork exists. The code for them is in this
@@ -69,7 +69,8 @@ the secretary a plain structured draft to edit, which is all v1 needs.
 | Who | What they get |
 | --- | --- |
 | **Everyone (no login)** | Public bulletin, project pages with budget against actual spending, monthly calendar, the full fund ledger, and the SK council organization chart |
-| **SK Chairperson** | Record projects the council agreed on, approve budgets (blocked when the fund cannot cover them), schedule with overlap checks, **approve everything before it is published**, audit log, create official accounts |
+| **Site admin** | Decides who gets in. Officials ask for an account at `/request-access`; the admin checks each request against the list of elected officials, then approves it with a role, or turns it down. The admin can also change roles, reset passwords and turn accounts off. The admin is not an office: it is not on the council chart and cannot publish or approve anything |
+| **SK Chairperson** | Record projects the council agreed on, approve budgets (blocked when the fund cannot cover them), schedule with overlap checks, **approve everything before it is published**, audit log |
 | **SK Secretary** | Type or paste raw Taglish notes, or attach photos of handwritten pages as the original record, and get structured minutes: attendance, decisions, action items, draft resolutions, and a budget check |
 | **SK Treasurer** | Ledger (entries are voided, never deleted) with receipt photos, shown on the public ledger unless hidden; financial reports with every number computed in code, plus automatic warnings for overspending and missing receipts |
 | **SK Kagawad** | Post progress updates on the projects they lead |
@@ -142,12 +143,12 @@ records through them.
    from the one you develop against.
 2. Point `DATABASE_URL` at it in your shell and run **`npm run db:setup`**.
    Run `db:setup`, never `db:seed` — the demo accounts must not exist on a live site.
-3. Create the first Chairperson with **`npm run db:chair`**. Nothing else can:
-   public sign-up only ever creates kabataan accounts, and "Add official" needs a
-   chairperson to already exist. Without this step the live site has no way in.
+3. Create the site admin with **`npm run db:admin`**. Nothing else can: account requests
+   only work once an admin approves them, so without this step the live site has no way in.
 4. Import this GitHub repo in Vercel and add the environment variables above in
    Project Settings. A missing variable builds fine and fails at runtime, so check them twice.
-5. Deploy, then log in as the Chairperson and add the rest of the council from the Team page.
+5. Deploy. Send the council the link to `/request-access`, then log in as the admin and
+   approve each request on the Accounts page after checking it against the official list.
 
 AI pages allow up to 60 seconds. Photos are resized in the browser to stay under Vercel's
 4.5 MB request limit. Vercel's Hobby plan is for non-commercial use, so move to a paid plan
@@ -170,14 +171,15 @@ if the app is used for real SK operations.
 | Command | What it does |
 | --- | --- |
 | `npm run db:setup` | Creates or updates tables. Safe to re-run; never deletes data. Run after every `git pull` |
-| `npm run db:chair` | Creates the first Chairperson, or promotes an existing account |
+| `npm run db:admin` | Creates the site admin, or makes an existing account the admin. Also the way back in if every admin is locked out |
+| `npm run db:chair` | Creates a Chairperson directly, or promotes an existing account |
 | `npm run db:seed` | Demo data. Local only — never on a live site |
 | `npm run db:passwords` | Resets the demo accounts to `SEED_PASSWORD` |
 
 Repeated wrong passwords lock sign-in for about 15 minutes, counted per email address and per
 internet address, so a password cannot be guessed endlessly. A correct password clears the
 count, so an ordinary typo costs nothing. If someone is locked out and in a hurry, the
-Chairperson can set them a new password from the Team page.
+site admin can set them a new password from the Accounts page.
 
 ## Stack
 

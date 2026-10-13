@@ -9,7 +9,7 @@ import { fmtDate, fmtDateRange, timeAgo } from "@/lib/format";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) return { title: "SK council" };
-  const [u] = await sql<Row[]>`select name from users where id = ${id} and role <> 'kabataan'`;
+  const [u] = await sql<Row[]>`select name from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'`;
   return { title: u ? `${u.name} · SK council` : "SK council" };
 }
 
@@ -21,7 +21,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
   const [p] = await sql<Row[]>`
     select id, name, role, committee, bio, term, credentials, contributions,
            extract(epoch from avatar_updated_at)::bigint::text as avatar_v
-    from users where id = ${id} and role <> 'kabataan'`;
+    from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'`;
   if (!p) notFound();
 
   const [projects, [counts], activity, council] = await Promise.all([
@@ -49,7 +49,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
       ) a where at is not null order by at desc limit 6`,
     sql<Row[]>`
       select id, name, role, extract(epoch from avatar_updated_at)::bigint::text as avatar_v from users
-      where role <> 'kabataan' and id <> ${id}
+      where role in ('chairperson','secretary','treasurer','kagawad') and status = 'active' and id <> ${id}
       order by case role when 'chairperson' then 0 when 'secretary' then 1 when 'treasurer' then 2 else 3 end, name`,
   ]);
 

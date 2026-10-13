@@ -9,7 +9,7 @@ export const metadata = { title: "SK council" };
 export default async function CouncilPage() {
   const people = await sql<Row[]>`
     select id, name, role, committee, extract(epoch from avatar_updated_at)::bigint::text as avatar_v
-    from users where role <> 'kabataan'
+    from users where role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'
     order by case role when 'chairperson' then 0 when 'secretary' then 1 when 'treasurer' then 2 else 3 end, name`;
 
   return (

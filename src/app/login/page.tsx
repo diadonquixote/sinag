@@ -5,13 +5,14 @@ import SubmitButton from "@/components/SubmitButton";
 import PasswordInput from "@/components/PasswordInput";
 import AuthShell from "@/components/AuthShell";
 import { login } from "@/actions/auth";
-import { getSession } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 
 export const metadata = { title: "Log in" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
-  if (await getSession()) redirect("/dashboard");
+  // currentUser, not the cookie alone: a turned-off account must see this page, not loop back to the desk.
+  if (await currentUser()) redirect("/dashboard");
   return (
     <AuthShell
       title="Welcome back"
@@ -24,6 +25,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div><label className="label" htmlFor="password">Password</label><PasswordInput id="password" name="password" required autoComplete="current-password" /></div>
         <SubmitButton className="btn-primary w-full py-3" pending="Logging in...">Log in</SubmitButton>
       </form>
+      <p className="mt-6 border-t border-slate-100 pt-6 text-sm text-slate-600">Elected SK official without an account? <Link href="/request-access" className="font-semibold text-flag-blue hover:underline">Request one</Link></p>
     </AuthShell>
   );
 }
