@@ -12,7 +12,12 @@
     "db:seed": "node scripts/db-setup.mjs --seed",
     "db:passwords": "node scripts/reset-demo-passwords.mjs",
     "db:admin": "node scripts/make-account.mjs --admin",
-    "db:chair": "node scripts/make-account.mjs"
+    "db:chair": "node scripts/make-account.mjs",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -23,16 +28,22 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@playwright/test": "^1.49.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.5.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.0"
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "license": "AGPL-3.0-only"
 }

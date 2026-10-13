@@ -1,4 +1,5 @@
 import { sql, type Row } from "./db";
+import { toCentavos, toPesos } from "./money";
 
 export type FundSummary = {
   /** Annual SK fund set by the treasurer. */
@@ -13,20 +14,24 @@ export type FundSummary = {
   available: number;
 };
 
+/**
+ * Every figure is read from the database as exact text and added up in whole centavos
+ * (see money.ts), so "available" is never off by a rounding error.
+ */
 export async function fundSummary(): Promise<FundSummary> {
   const [setting] = await sql<Row[]>`select value from settings where key = 'total_fund'`;
-  const total = Number(setting?.value ?? 0) || 0;
+  const total = toCentavos(String(setting?.value ?? "0"));
 
   const [ledger] = await sql<Row[]>`
     select
-      coalesce(sum(amount) filter (where kind = 'income'), 0)::float8 as income,
-      coalesce(sum(amount) filter (where kind = 'expense'), 0)::float8 as expense
+      coalesce(sum(amount) filter (where kind = 'income'), 0)::text as income,
+      coalesce(sum(amount) filter (where kind = 'expense'), 0)::text as expense
     from transactions
     where voided_at is null
   `;
 
   const [commit] = await sql<Row[]>`
-    select coalesce(sum(greatest(p.budget - coalesce(e.spent, 0), 0)), 0)::float8 as committed
+    select coalesce(sum(greatest(p.budget - coalesce(e.spent, 0), 0)), 0)::text as committed
     from projects p
     left join (
       select project_id, sum(amount) as spent
@@ -35,8 +40,15 @@ export async function fundSummary(): Promise<FundSummary> {
     where p.status in ('approved', 'scheduled', 'ongoing')
   `;
 
-  const income = Number(ledger.income);
-  const expense = Number(ledger.expense);
-  const committed = Number(commit.committed);
-  return { total, income, expense, committed, available: total + income - expense - committed };
+  const income = toCentavos(ledger.income as string);
+  const expense = toCentavos(ledger.expense as string);
+  const committed = toCentavos(commit.committed as string);
+  const available = total + income - expense - committed;
+  return {
+    total: toPesos(total),
+    income: toPesos(income),
+    expense: toPesos(expense),
+    committed: toPesos(committed),
+    available: toPesos(available),
+  };
 }

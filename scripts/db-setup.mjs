@@ -51,6 +51,7 @@ try {
     console.log("");
     console.log("Demo accounts (password: " + password + ")");
     for (const [role, email] of [
+      ["Site admin", "admin@sinag.demo"],
       ["SK Chairperson", "chair@sinag.demo"],
       ["SK Secretary", "secretary@sinag.demo"],
       ["SK Treasurer", "treasurer@sinag.demo"],

@@ -21,7 +21,8 @@ insert into users (id, name, email, password_hash, role, barangay) values
   (5, 'Bea Bautista',     'kagawad2@sinag.demo',  crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kagawad',     'Demo Barangay'),
   (6, 'Lia Mendoza',      'youth1@sinag.demo',    crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kabataan',    'Demo Barangay'),
   (7, 'Marco Villanueva', 'youth2@sinag.demo',    crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kabataan',    'Demo Barangay'),
-  (8, 'Joy Ramos',        'youth3@sinag.demo',    crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kabataan',    'Demo Barangay');
+  (8, 'Joy Ramos',        'youth3@sinag.demo',    crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'kabataan',    'Demo Barangay'),
+  (9, 'Site Admin',       'admin@sinag.demo',     crypt('{{SEED_PASSWORD}}', gen_salt('bf', 10)), 'admin',       null);
 
 -- Profile details for the demo people
 update users set committee = 'Presiding officer', purok = 'Purok 3', bio = 'SK Chairperson. Studying public administration and coaching the barangay volleyball team on weekends.' where id = 1;

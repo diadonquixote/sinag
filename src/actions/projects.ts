@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { back } from "@/lib/flash";
 import { audit } from "@/lib/audit";
 import { fundSummary } from "@/lib/funds";
+import { centavosToNumeric, parsePesoInput, toCentavos, toPesos } from "@/lib/money";
 import { polishUpdate } from "@/lib/ai";
 import { fmtDate, peso } from "@/lib/format";
 import { CATEGORIES, isOfficial } from "@/lib/roles";
@@ -29,23 +30,24 @@ export async function createProject(fd: FormData): Promise<void> {
   const title = String(fd.get("title") ?? "").trim();
   const description = String(fd.get("description") ?? "").trim();
   const category = String(fd.get("category") ?? "").trim();
-  const budget = Number(String(fd.get("budget") ?? "").replace(/[^\d.]/g, ""));
+  const budgetCentavos = parsePesoInput(fd.get("budget"), 100_000_000);
 
   if (title.length < 3) back("/dashboard/chair", "err", "Give the project a title.");
   if (description.length < 10) back("/dashboard/chair", "err", "Describe the project in a sentence or two, so the public understands it.");
   if (!(CATEGORIES as readonly string[]).includes(category)) back("/dashboard/chair", "err", "Choose a category.");
-  if (!(budget > 0) || budget > 100_000_000) back("/dashboard/chair", "err", "Enter the budget in pesos.");
+  if (budgetCentavos === null) back("/dashboard/chair", "err", "Enter the budget in pesos, with at most two decimal places.");
+  const budget = toPesos(budgetCentavos);
 
   const [project] = await sql<Row[]>`
     insert into projects (title, description, category, budget, status)
-    values (${title.slice(0, 200)}, ${description.slice(0, 4000)}, ${category}, ${budget}, 'proposed')
+    values (${title.slice(0, 200)}, ${description.slice(0, 4000)}, ${category}, ${centavosToNumeric(budgetCentavos)}, 'proposed')
     returning id
   `;
   const id = project.id as number;
   await audit(chair.id, "created project", "project", id, `${title} (${peso(budget)})`);
 
   const funds = await fundSummary();
-  const short = funds.available < budget
+  const short = toCentavos(funds.available) < budgetCentavos
     ? ` Note: only ${peso(funds.available)} is available, so this cannot be approved yet.`
     : "";
   back("/dashboard/chair", "ok", `"${title}" recorded as a proposal for ${peso(budget)}.${short}`);
@@ -55,12 +57,13 @@ export async function createProject(fd: FormData): Promise<void> {
 export async function updateProposalBudget(fd: FormData): Promise<void> {
   const chair = await requireRole("chairperson");
   const id = projectId(fd);
-  const budget = Number(String(fd.get("budget") ?? "").replace(/[^\d.]/g, ""));
+  const budgetCentavos = parsePesoInput(fd.get("budget"), 100_000_000);
   const path = `/projects/${id}`;
-  if (!(budget > 0) || budget > 100_000_000) back(path, "err", "Enter the budget in pesos.");
+  if (budgetCentavos === null) back(path, "err", "Enter the budget in pesos, with at most two decimal places.");
+  const budget = toPesos(budgetCentavos);
 
   const rows = await sql<Row[]>`
-    update projects set budget = ${budget} where id = ${id} and status = 'proposed' returning title
+    update projects set budget = ${centavosToNumeric(budgetCentavos)} where id = ${id} and status = 'proposed' returning title
   `;
   if (rows.length === 0) back(path, "err", "The budget can only be changed while a proposal is under review.");
   await audit(chair.id, "changed proposed budget", "project", id, peso(budget));
@@ -73,12 +76,12 @@ export async function approveProject(fd: FormData): Promise<void> {
   const id = projectId(fd);
   const path = `/projects/${id}`;
 
-  const [project] = await sql<Row[]>`select title, status, budget::float8 as budget from projects where id = ${id}`;
+  const [project] = await sql<Row[]>`select title, status, budget::text as budget from projects where id = ${id}`;
   if (!project || project.status !== "proposed") back(path, "err", "Only proposals under review can be approved.");
 
   const funds = await fundSummary();
-  const budget = Number(project.budget);
-  if (budget > funds.available) {
+  const budget = toPesos(toCentavos(project.budget as string));
+  if (toCentavos(project.budget as string) > toCentavos(funds.available)) {
     back(
       path,
       "err",

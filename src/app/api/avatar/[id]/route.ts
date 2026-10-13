@@ -1,3 +1,4 @@
+import { imageResponse } from "@/lib/image-response";
 import { sql, type Row } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { isOfficial } from "@/lib/roles";
@@ -14,18 +15,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const [row] = await sql<Row[]>`select role, status, avatar, avatar_type from users where id = ${id} and avatar is not null`;
   if (!row) return new Response("Not found", { status: 404 });
 
-  const publicPhoto = isOfficial(row.role as string) && row.status === "active";
+  const publicPhoto = isOfficial(row.role as string) && (row.status === "active" || row.status === "former");
   if (!publicPhoto) {
     const viewer = await currentUser();
     if (!viewer || (viewer.id !== id && !isOfficial(viewer.role))) return new Response("Not found", { status: 404 });
   }
 
   // The URL carries ?v=<last change>, so the browser can keep the photo until it changes.
-  return new Response(new Uint8Array(row.avatar as Buffer), {
-    headers: {
-      "Content-Type": (row.avatar_type as string) || "image/jpeg",
-      "Cache-Control": `${publicPhoto ? "public" : "private"}, max-age=31536000, immutable`,
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
+  return imageResponse(row.avatar as Buffer, row.avatar_type as string, `${publicPhoto ? "public" : "private"}, max-age=31536000, immutable`);
 }

@@ -7,7 +7,7 @@ import { sql, type Row } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { isOfficial, ROLE_LABEL } from "@/lib/roles";
 import { fmtDate, initials } from "@/lib/format";
-import { changePassword } from "@/actions/auth";
+import { changePassword, logoutEverywhere } from "@/actions/auth";
 import { updatePhoto, updateProfile } from "@/actions/profile";
 
 export const metadata = { title: "Profile" };
@@ -153,6 +153,15 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               <div><label className="label" htmlFor="next">New password</label><PasswordInput id="next" name="next" required minLength={8} autoComplete="new-password" /></div>
             </div>
             <SubmitButton className="btn-outline" pending="Saving...">Change password</SubmitButton>
+            <p className="hint">Changing your password also logs you out on every other device.</p>
+          </form>
+
+          <form action={logoutEverywhere} className="card space-y-3 sm:p-6">
+            <div>
+              <h2 className="text-lg font-bold">Log out everywhere</h2>
+              <p className="hint mt-0.5">Lost your phone, or logged in on a shared computer? This ends every login for your account, including this one.</p>
+            </div>
+            <SubmitButton className="btn-outline text-flag-red" pending="Logging out...">Log out on all devices</SubmitButton>
           </form>
           <div className="lg:hidden"><WhoSees official={official} /></div>
         </div>

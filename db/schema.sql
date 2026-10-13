@@ -29,6 +29,9 @@ alter table users add column if not exists contributions text;       -- official
 -- Site admin and account approval. Officials can ask for an account themselves; it stays
 -- 'pending' until the site admin checks them against the list of elected officials.
 -- A turned-down request is deleted; 'disabled' is an approved account the admin switched off.
+-- 'former' is an official whose term has ended: they cannot log in, and they stay on the public
+-- record as a former official. 'removed' is an account whose personal details were erased but
+-- whose name stays on what they published in office.
 -- The role check is dropped and re-added so databases created before 'admin' existed accept it.
 alter table users drop constraint if exists users_role_check;
 alter table users add constraint users_role_check
@@ -36,11 +39,19 @@ alter table users add constraint users_role_check
 alter table users add column if not exists status text not null default 'active';
 alter table users drop constraint if exists users_status_check;
 alter table users add constraint users_status_check
-  check (status in ('pending','active','disabled'));
+  check (status in ('pending','active','disabled','former','removed'));
 alter table users add column if not exists request_note text;       -- what they wrote so the admin can confirm who they are
 alter table users add column if not exists reviewed_by int references users(id) on delete set null;
 alter table users add column if not exists reviewed_at timestamptz;
 create index if not exists users_status_idx on users (status, created_at);
+
+-- Raised whenever a password changes or an account is turned off, removed or logged out
+-- everywhere. Every login cookie carries the number it was issued with; a mismatch means
+-- the cookie no longer works, on any device.
+alter table users add column if not exists session_version int not null default 1;
+-- When this person agreed to the privacy notice, and which version of it.
+alter table users add column if not exists privacy_accepted_at timestamptz;
+alter table users add column if not exists privacy_version text;
 
 create table if not exists settings (
   key text primary key,

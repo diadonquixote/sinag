@@ -9,7 +9,7 @@ import { fmtDate, fmtDateRange, timeAgo } from "@/lib/format";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) return { title: "SK council" };
-  const [u] = await sql<Row[]>`select name from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'`;
+  const [u] = await sql<Row[]>`select name from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status in ('active', 'former')`;
   return { title: u ? `${u.name} · SK council` : "SK council" };
 }
 
@@ -19,9 +19,9 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
   if (!Number.isInteger(id) || id <= 0) notFound();
 
   const [p] = await sql<Row[]>`
-    select id, name, role, committee, bio, term, credentials, contributions,
+    select id, name, role, status, committee, bio, term, credentials, contributions,
            extract(epoch from avatar_updated_at)::bigint::text as avatar_v
-    from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status = 'active'`;
+    from users where id = ${id} and role in ('chairperson','secretary','treasurer','kagawad') and status in ('active', 'former')`;
   if (!p) notFound();
 
   const [projects, [counts], activity, council] = await Promise.all([
@@ -82,7 +82,7 @@ export default async function OfficialProfile({ params }: { params: Promise<{ id
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
             <Avatar id={p.id} name={p.name} v={p.avatar_v} size="xl" className="-mt-14 !h-28 !w-28 text-3xl ring-4 ring-white shadow-md" />
             <div className="min-w-0 sm:pt-5">
-              <p className="eyebrow">{ROLE_LABEL[p.role as Role]}</p>
+              <p className="eyebrow">{p.status === "former" ? `Former ${ROLE_LABEL[p.role as Role]}` : ROLE_LABEL[p.role as Role]}</p>
               <h1 className="mt-1 text-3xl font-bold leading-tight sm:text-4xl">{p.name}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                 {p.committee && <span className="rounded-full bg-mist px-3 py-1 text-xs font-semibold text-flag-blue ring-1 ring-inset ring-slate-200">{p.committee}</span>}

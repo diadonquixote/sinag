@@ -9,6 +9,7 @@ import { narrateReport } from "@/lib/ai";
 import { fmtDate, peso, todayManila } from "@/lib/format";
 import type { ReportData, ReportLine } from "@/lib/types";
 import { decodeImage } from "@/lib/images";
+import { centavosToNumeric, parsePesoInput, sumCentavos, toCentavos, toPesos } from "@/lib/money";
 
 const MAX_RECEIPTS = 3;
 const MAX_RECEIPT_BYTES = 1_200_000; // photos are shrunk to about 1600 px in the browser first
@@ -29,16 +30,14 @@ async function saveReceipts(txId: number, photos: { bytes: Buffer; type: string 
 
 const DESK = "/dashboard/treasurer";
 
-function money(value: FormDataEntryValue | null): number {
-  return Number(String(value ?? "0").replace(/[^\d.]/g, ""));
-}
 
 export async function setFund(fd: FormData): Promise<void> {
   const user = await requireRole("treasurer", "chairperson");
-  const total = money(fd.get("total_fund"));
-  if (!Number.isFinite(total) || total < 0 || total > 1_000_000_000) back(DESK, "err", "Enter the total SK fund in pesos.");
+  const centavos = parsePesoInput(fd.get("total_fund"), 1_000_000_000, { allowZero: true });
+  if (centavos === null) back(DESK, "err", "Enter the total SK fund in pesos, with at most two decimal places.");
+  const total = toPesos(centavos);
   await sql`
-    insert into settings (key, value) values ('total_fund', ${String(total)})
+    insert into settings (key, value) values ('total_fund', ${centavosToNumeric(centavos)})
     on conflict (key) do update set value = excluded.value
   `;
   await audit(user.id, "set total fund", "settings", null, peso(total));
@@ -48,7 +47,7 @@ export async function setFund(fd: FormData): Promise<void> {
 export async function addTransaction(fd: FormData): Promise<void> {
   const user = await requireRole("treasurer");
   const kind = fd.get("kind") === "income" ? "income" : "expense";
-  const amount = money(fd.get("amount"));
+  const amountCentavos = parsePesoInput(fd.get("amount"), 1_000_000_000);
   const description = String(fd.get("description") ?? "").trim();
   const category = String(fd.get("category") ?? "").trim().slice(0, 60) || null;
   const reference = String(fd.get("reference") ?? "").trim().slice(0, 60) || null;
@@ -56,7 +55,8 @@ export async function addTransaction(fd: FormData): Promise<void> {
   const projectRaw = String(fd.get("project_id") ?? "");
   const projectId = projectRaw ? Number(projectRaw) : null;
 
-  if (!(amount > 0) || amount > 1_000_000_000) back(DESK, "err", "Enter an amount greater than zero.");
+  if (amountCentavos === null) back(DESK, "err", "Enter an amount greater than zero, with at most two decimal places.");
+  const amount = toPesos(amountCentavos);
   if (description.length < 3) back(DESK, "err", "Describe what this entry is for.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) back(DESK, "err", "Pick the date of the transaction.");
   const receipts = receiptPhotos(fd);
@@ -72,7 +72,7 @@ export async function addTransaction(fd: FormData): Promise<void> {
 
   const [row] = await sql<Row[]>`
     insert into transactions (project_id, kind, amount, description, category, tx_date, reference, created_by)
-    values (${projectId}, ${kind}, ${amount}, ${description.slice(0, 200)}, ${category}, ${date}::date, ${reference}, ${user.id})
+    values (${projectId}, ${kind}, ${centavosToNumeric(amountCentavos)}, ${description.slice(0, 200)}, ${category}, ${date}::date, ${reference}, ${user.id})
     returning id
   `;
   await saveReceipts(row.id as number, receipts, fd.get("receipts_public") === "1", user.id);
@@ -139,7 +139,7 @@ export async function createReport(fd: FormData): Promise<void> {
 
   const rows = await sql<Row[]>`
     select t.tx_date::text as date, t.kind, t.description, t.category, t.reference,
-           t.amount::float8 as amount, p.title as project,
+           t.amount::text as amount, p.title as project,
            (select count(*)::int from transaction_receipts r where r.transaction_id = t.id) as receipts
     from transactions t
     left join projects p on p.id = t.project_id
@@ -152,26 +152,29 @@ export async function createReport(fd: FormData): Promise<void> {
     description: r.description as string,
     category: (r.category as string) ?? null,
     project: (r.project as string) ?? null,
-    amount: Number(r.amount),
+    amount: toPesos(toCentavos(r.amount as string)),
     reference: (r.reference as string) ?? null,
     receipts: Number(r.receipts ?? 0),
   }));
 
-  const income = lines.filter((l) => l.kind === "income").reduce((s, l) => s + l.amount, 0);
-  const expense = lines.filter((l) => l.kind === "expense").reduce((s, l) => s + l.amount, 0);
+  // Added up in whole centavos so the totals are exact (see money.ts).
+  const income = toPesos(sumCentavos(lines.filter((l) => l.kind === "income").map((l) => toCentavos(l.amount))));
+  const expense = toPesos(sumCentavos(lines.filter((l) => l.kind === "expense").map((l) => toCentavos(l.amount))));
 
   const catMap = new Map<string, number>();
   for (const l of lines) {
     if (l.kind !== "expense") continue;
     const key = l.category || "Uncategorized";
-    catMap.set(key, (catMap.get(key) ?? 0) + l.amount);
+    catMap.set(key, (catMap.get(key) ?? 0) + toCentavos(l.amount));
   }
-  const byCategory = [...catMap.entries()].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount);
+  const byCategory = [...catMap.entries()]
+    .map(([category, centavos]) => ({ category, amount: toPesos(centavos) }))
+    .sort((a, b) => b.amount - a.amount);
 
   const projectSpend = await sql<Row[]>`
-    select p.title as project, p.budget::float8 as budget,
-           coalesce(sum(t.amount) filter (where t.tx_date between ${from}::date and ${to}::date), 0)::float8 as spent_in_period,
-           coalesce(sum(t.amount), 0)::float8 as spent_total
+    select p.title as project, p.budget::text as budget,
+           coalesce(sum(t.amount) filter (where t.tx_date between ${from}::date and ${to}::date), 0)::text as spent_in_period,
+           coalesce(sum(t.amount), 0)::text as spent_total
     from projects p
     join transactions t on t.project_id = p.id and t.kind = 'expense' and t.voided_at is null
     group by p.id
@@ -180,8 +183,8 @@ export async function createReport(fd: FormData): Promise<void> {
   `;
   const byProject = projectSpend.map((r) => ({
     project: r.project as string,
-    budget: Number(r.budget),
-    spent: Number(r.spent_in_period),
+    budget: toPesos(toCentavos(r.budget as string)),
+    spent: toPesos(toCentavos(r.spent_in_period as string)),
   }));
 
   const funds = await fundSummary();
@@ -189,8 +192,8 @@ export async function createReport(fd: FormData): Promise<void> {
   if (lines.length === 0) flags.push("There are no recorded transactions in this period.");
   if (funds.available < 0) flags.push(`The fund is overcommitted by ${peso(Math.abs(funds.available))}.`);
   for (const r of projectSpend) {
-    if (Number(r.spent_total) > Number(r.budget)) {
-      flags.push(`${r.project} has spent ${peso(Number(r.spent_total))}, which is more than its budget of ${peso(Number(r.budget))}.`);
+    if (toCentavos(r.spent_total as string) > toCentavos(r.budget as string)) {
+      flags.push(`${r.project} has spent ${peso(r.spent_total as string)}, which is more than its budget of ${peso(r.budget as string)}.`);
     }
   }
   const noRef = lines.filter((l) => l.kind === "expense" && !l.reference && !l.receipts).length;

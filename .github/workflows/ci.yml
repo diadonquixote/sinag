@@ -1,0 +1,113 @@
+name: CI
+
+# Every push to v1 or v1-next, and every pull request, is checked here:
+# lint, unit tests, database tests, a real production build, type check,
+# and end-to-end tests in a real browser against a real Postgres.
+
+on:
+  push:
+    branches: [v1, v1-next]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sinag
+          POSTGRES_PASSWORD: sinag
+          POSTGRES_DB: sinag_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sinag"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://sinag:sinag@localhost:5432/sinag_ci
+      AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+      NEXT_PUBLIC_ORG_NAME: SK ng Barangay CI
+      SEED_PASSWORD: ci-demo-password
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci || npm install --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Create tables (twice, to prove setup is safe to re-run)
+        run: npm run db:setup && npm run db:setup
+
+      - name: Unit and database tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Load demo data for the browser tests
+        run: npm run db:seed
+
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Keep the report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # package.json gains dev tools from an environment that cannot reach the npm registry,
+  # so the lockfile is brought up to date here and committed back. Only on v1-next.
+  lockfile:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/v1-next'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --package-lock-only --no-audit --no-fund
+      - name: Commit the lockfile if it changed
+        run: |
+          if git diff --quiet package-lock.json; then
+            echo "Lockfile already up to date."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update package-lock.json to match package.json" package-lock.json
+            git push
+          fi

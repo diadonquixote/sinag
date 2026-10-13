@@ -5,7 +5,7 @@ import { ArrowLink, DateTile, Empty, SectionHeader } from "@/components/ui";
 import { getFeed, getStats, getUpcoming } from "@/lib/queries";
 import { categoryStyle } from "@/lib/roles";
 import { fmtDateRange, peso } from "@/lib/format";
-import { getSession } from "@/lib/auth";
+import { currentUser } from "@/lib/auth";
 import { ORG_NAME } from "@/lib/org";
 
 const STEPS: [string, string][] = [
@@ -24,7 +24,7 @@ const ROLES: [string, string][] = [
 ];
 
 export default async function Home() {
-  const [stats, upcoming, feed, user] = await Promise.all([getStats(), getUpcoming(4), getFeed(4), getSession()]);
+  const [stats, upcoming, feed, user] = await Promise.all([getStats(), getUpcoming(4), getFeed(4), currentUser()]);
 
   return (
     <>
