@@ -34,6 +34,11 @@ const HIDE_CSS = `
   nextjs-portal { display: none !important; }
 `;
 
+function hideScript() {
+  return `(() => { const add = () => { if (document.getElementById("__demo_css")) return; const s = document.createElement("style"); s.id = "__demo_css"; s.textContent = ${JSON.stringify(HIDE_CSS)}; (document.head || document.documentElement).appendChild(s); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", add); else add(); })();`;
+}
+
 // ------------------------------------------------------------------ frame capture
 let n = 0;
 const list = [];
@@ -190,12 +195,27 @@ async function card(page, title, sub, foot, { hold = 2.6, mark = false } = {}) {
   for (let i = F - 1; i >= 0; i--) { await page.evaluate(([t, s, f, p, m]) => window.__demo.card(t, s, f, p, m), [title, sub, foot, i / F, mark]); await shot(page); }
 }
 
-async function login(page, email) {
+async function login(page, email, { show = false, then } = {}) {
   await page.context().clearCookies();
-  await go(page, "/login");
-  await typeInto(page, page.getByLabel("Email", { exact: true }), email);
-  await typeInto(page, page.getByLabel("Password", { exact: true }), PASSWORD, { secret: true });
-  await clickOn(page, page.getByRole("button", { name: "Log in" }));
+  if (show) {
+    await go(page, "/login");
+    await typeInto(page, page.getByLabel("Email", { exact: true }), email);
+    await typeInto(page, page.getByLabel("Password", { exact: true }), PASSWORD, { secret: true });
+    await clickOn(page, page.getByRole("button", { name: "Log in" }));
+    return;
+  }
+  // Off camera: log in, then fade to the desk.
+  await ensure(page);
+  await veil(page, 0, 1);
+  await page.goto(BASE + "/login");
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Log in" }).click();
+  await page.waitForURL((u) => u.pathname !== "/login", { timeout: 15000 }).catch(() => {});
+  if (then) await page.goto(BASE + then);
+  await settle(page);
+  await page.evaluate(() => window.__demo.veil(1));
+  await veil(page, 1, 0);
 }
 
 // Climbs from an element to the nearest card-like box around it.
@@ -207,6 +227,11 @@ async function addDemoExtras(browser) {
   const { default: postgres } = await import("postgres");
   const sql = postgres(process.env.DATABASE_URL, { prepare: false, max: 1 });
   const page = await browser.newPage({ viewport: { width: 420, height: 620 }, deviceScaleFactor: 1.5 });
+  await sql`insert into transactions (project_id, kind, amount, description, category, tx_date, reference, created_by, voided_at, void_reason)
+            values (3, 'expense', 850, 'Tarpaulin printing', 'Printing', current_date - 2, 'OR-0430', 3, now(), 'Entered twice; the correct entry is OR-0433')`;
+  await sql`insert into transactions (project_id, kind, amount, description, category, tx_date, reference, created_by)
+            values (3, 'expense', 850, 'Tarpaulin printing', 'Printing', current_date - 2, 'OR-0433', 3)`;
+  await sql`update minutes set data = data - 'used_ai'`;
   const rows = await sql`select id, amount::text as amount, description, reference, tx_date::text as d from transactions where kind = 'expense' and voided_at is null order by id`;
   for (const t of rows) {
     const html = `<!doctype html><html><body style="margin:0;background:#e7e2d6;display:flex;align-items:center;justify-content:center;height:620px;font-family:'Courier New',monospace">
@@ -228,10 +253,6 @@ async function addDemoExtras(browser) {
     await sql`insert into transaction_receipts (transaction_id, data, type, is_public, created_by) values (${t.id}, ${jpg}, 'image/jpeg', true, 3)`;
   }
   await page.close();
-  await sql`insert into transactions (project_id, kind, amount, description, category, tx_date, reference, created_by, voided_at, void_reason)
-            values (3, 'expense', 850, 'Tarpaulin printing', 'Printing', current_date - 2, 'OR-0430', 3, now(), 'Entered twice; the correct entry is OR-0433')`;
-  await sql`insert into transactions (project_id, kind, amount, description, category, tx_date, reference, created_by)
-            values (3, 'expense', 850, 'Tarpaulin printing', 'Printing', current_date - 2, 'OR-0433', 3)`;
   await sql`insert into users (name, email, password_hash, role, barangay, status, request_note, term)
             values ('Carlo Mercado', 'carlo.mercado@example.ph', crypt(${PASSWORD || "x"}, gen_salt('bf', 6)), 'kagawad', 'Demo Barangay', 'pending',
                     'Elected SK Kagawad in 2023. The Chairperson and the barangay secretary can confirm.', '2023 to 2026')
@@ -243,6 +264,7 @@ async function addDemoExtras(browser) {
 // ------------------------------------------------------------------ phone shots
 async function phoneShots(browser) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, bypassCSP: true });
+  await ctx.addInitScript(hideScript());
   const p = await ctx.newPage();
   const out = [];
   for (const url of ["/", "/funds", "/projects/1"]) {
@@ -275,8 +297,8 @@ const scenes = {
   async bulletin(page) {
     await go(page, "/feed");
     await point(page, box(page.locator('main a[href^="/feed/minutes/"]').first()), "The public bulletin", "Minutes of every session, financial reports and project updates in one feed.");
-    await point(page, page.getByText(/^Approved by /), "Approved before it goes up", "Each record shows who wrote it and that the Chairperson approved it.");
     await clickOn(page, page.locator('main a[href^="/feed/minutes/"]'));
+    await point(page, page.getByText(/Approved by/), "Approved before it goes up", "Each record shows who wrote it and which Chairperson approved it.", { place: 0.3 });
     await point(page, page.getByRole("heading", { name: /Decisions/ }), "Decisions on the record", "Attendance, agenda, decisions and action items, written so anyone can follow.", { place: 0.35 });
     await go(page, "/feed/reports/1");
     await point(page, page.locator("main h1"), "Financial reports", "Income and spending for the period, every line listed.");
@@ -361,13 +383,14 @@ const scenes = {
   },
 
   async admin(page) {
-    await login(page, "admin@sinag.demo");
+    await login(page, "admin@sinag.demo", { show: true });
     await point(page, page.locator("main li").filter({ hasText: "Carlo Mercado" }), "The admin checks every request", "Compared against the list of elected officials, then approved or turned down.");
     await point(page, page.locator("main li").filter({ hasText: "Carlo Mercado" }).getByRole("button", { name: /Approve/ }), "One click to approve", "The admin cannot publish anything. They only decide who gets in.");
   },
 
   async secretary(page) {
     await login(page, "secretary@sinag.demo");
+    await clickOn(page, page.getByRole("button", { name: /Use sample notes/ }), { place: 0.6 });
     await point(page, page.getByRole("button", { name: "Turn into minutes" }).locator("xpath=ancestor::form[1]"), "Meeting notes in, minutes out", "The secretary types the notes or adds photos of the handwritten pages, which are kept as the original.", { place: 0.45 });
   },
 
@@ -375,7 +398,6 @@ const scenes = {
     await login(page, "treasurer@sinag.demo");
     await point(page, page.getByRole("heading", { name: "Record an entry" }).locator("xpath=ancestor::*[self::form or self::section or contains(@class,'card')][1]"), "Record every peso", "Amount, purpose, project and the official receipt number.", { place: 0.45 });
     await point(page, page.getByRole("heading", { name: "Generate a financial report" }).locator("xpath=ancestor::*[self::form or self::section or contains(@class,'card')][1]"), "Reports in one click", "Every number is computed from the ledger, with warnings for overspending and missing receipts.", { place: 0.45 });
-    await point(page, page.getByText("Void this entry"), "Fix mistakes in the open", "Voiding keeps the entry on the record with the reason.", { place: 0.5 });
   },
 
   async chair(page) {
@@ -384,6 +406,7 @@ const scenes = {
     await point(page, [page.locator("main li").filter({ has: publish }), box(publish.first())], "Nothing goes up without approval", "Minutes and reports wait here until the Chairperson reviews them.");
     await clickOn(page, publish);
     await point(page, page.getByRole("status"), "Published", "It is now on the public bulletin, with the Chairperson's name on it.", { hold: 2.2 });
+    await go(page, "/dashboard/chair");
     await point(page, page.getByRole("heading", { name: "Recent activity" }).locator("xpath=.."), "An audit trail", "Every important action is logged: who did what, and when.", { place: 0.4 });
     await page.context().clearCookies();
   },
@@ -400,6 +423,7 @@ try {
   await addDemoExtras(browser);
   const phones = await phoneShots(browser).catch((e) => { log("phone shots failed:", e.message); return []; });
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE, bypassCSP: true });
+  await ctx.addInitScript(hideScript());
   const page = await ctx.newPage();
   for (const [name, fn] of Object.entries(scenes)) {
     if (ONLY && !ONLY.split(",").includes(name) && name !== "intro") continue;

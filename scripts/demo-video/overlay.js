@@ -11,7 +11,7 @@ function installDemoOverlay() {
 
   const root = document.createElement("div");
   root.id = "__demo";
-  css(root, { position: "fixed", inset: "0", zIndex: "2147483647", pointerEvents: "none", fontFamily: "var(--font-sans), 'Plus Jakarta Sans', system-ui, sans-serif" });
+  css(root, { position: "fixed", inset: "0", zIndex: "2147483647", pointerEvents: "none", fontFamily: "var(--font-sans, system-ui), system-ui, sans-serif" });
 
   const spot = document.createElement("div");
   css(spot, { position: "absolute", borderRadius: "14px", boxShadow: "0 0 0 9999px rgba(8,18,44,0.45), 0 0 0 3px " + YELLOW + ", 0 0 28px 6px rgba(252,209,22,0.55)", opacity: "0", display: "none" });
@@ -44,7 +44,7 @@ function installDemoOverlay() {
   const cardMark = document.createElement("div");
   css(cardMark, { width: "132px", height: "132px", marginBottom: "18px" });
   const cardTitle = document.createElement("div");
-  css(cardTitle, { fontFamily: "var(--font-display), Georgia, serif", fontWeight: "700", fontSize: "76px", lineHeight: "1.05", color: BLUE, letterSpacing: "-0.02em" });
+  css(cardTitle, { fontFamily: "var(--font-display, Georgia), Georgia, serif", fontWeight: "700", fontSize: "76px", lineHeight: "1.05", color: BLUE, letterSpacing: "-0.02em" });
   const cardSub = document.createElement("div");
   css(cardSub, { marginTop: "18px", fontSize: "26px", lineHeight: "1.45", color: "#334155", maxWidth: "980px", whiteSpace: "pre-line" });
   const cardFoot = document.createElement("div");
