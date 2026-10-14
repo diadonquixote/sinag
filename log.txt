@@ -1,0 +1,50 @@
+demo extras added: receipts for 6 entries, a voided entry, a pending request
+scene: intro
+scene: home
+  ok: Whose records these are
+  ok: Everything here is public
+  ok: English or Filipino
+  ok: Always shows how current it is
+  ok: Numbers computed from the records
+  ok: What's coming up
+scene: bulletin
+  ok: The public bulletin
+  ok: Approved before it goes up
+  ok: Decisions on the record
+  ok: Financial reports
+  ok: Every peso, line by line
+scene: projects
+  ok: Projects the council agreed on
+  ok: Budget used so far
+  ok: Updates from the field
+scene: calendar
+  ok: The council's calendar
+scene: funds
+  ok: Where the money stands
+  ok: Budget against spending
+  ok: Every expense has its receipt
+  ok: The actual receipt
+  ok: Mistakes are voided, never deleted
+scene: council
+  ok: The people you elected
+  ok: Credentials and contributions
+scene: language
+  ok: Nasa Filipino rin
+scene: phone
+scene: officials
+  ok: Officials ask for an account
+scene: admin
+  ok: The admin checks every request
+  ok: One click to approve
+scene: secretary
+  ok: Meeting notes in, minutes out
+scene: treasurer
+  ok: Record every peso
+  ok: Reports in one click
+scene: chair
+  ok: Nothing goes up without approval
+  ok: Published
+  ok: An audit trail
+scene: outro
+frames: 1706, length: 162.7 s
+video: /home/runner/work/sinag/sinag/demo-out/sinag-demo.mp4
