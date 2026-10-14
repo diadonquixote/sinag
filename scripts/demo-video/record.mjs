@@ -390,6 +390,12 @@ const scenes = {
 
   async secretary(page) {
     await login(page, "secretary@sinag.demo");
+    // A setup notice for whoever runs the site, not a feature: leave it out of the video.
+    await page.evaluate(() => {
+      for (const el of document.querySelectorAll("main div, main p")) {
+        if (el.textContent && el.textContent.includes("GEMINI_API_KEY") && el.children.length < 4) { (el.closest('[role="note"], .rounded-xl, .rounded-2xl') || el).remove(); break; }
+      }
+    });
     await clickOn(page, page.getByRole("button", { name: /Use sample notes/ }), { place: 0.6 });
     await point(page, page.getByRole("button", { name: "Turn into minutes" }).locator("xpath=ancestor::form[1]"), "Meeting notes in, minutes out", "The secretary types the notes or adds photos of the handwritten pages, which are kept as the original.", { place: 0.45 });
   },
