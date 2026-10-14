@@ -83,16 +83,7 @@ This is not a portfolio piece. It is meant to be used.
 
 ## Security
 
-| Risk | What Sinag does |
-| --- | --- |
-| Clickjacking, injected scripts | `X-Frame-Options: DENY`, a Content-Security-Policy with `frame-ancestors 'none'` that allows only the site's own resources, `nosniff`, HSTS, a strict Referrer-Policy and Permissions-Policy ([`next.config.mjs`](next.config.mjs)) |
-| Stolen or stale logins | HttpOnly, Secure, SameSite=Lax cookies with the `__Host-` prefix. Every login carries a session number: changing a password, an admin reset, turning an account off, ending a term or "Log out everywhere" invalidates it on every device ([`src/lib/auth.ts`](src/lib/auth.ts)) |
-| Password guessing | Failed attempts are counted per email and per address in the database and locked for 15 minutes |
-| Hostile uploads | The real file type must match the label, the file must be structurally whole, dimensions are capped, and EXIF/GPS/comments are stripped before storage. Stored photos are served with a sandboxing policy ([`src/lib/images.ts`](src/lib/images.ts)) |
-| Wrong role | Every page and action re-reads the account from the database before acting |
-| Missing settings | The build stops with a clear message if `DATABASE_URL` or `AUTH_SECRET` is missing, instead of failing on the first visitor |
-
-Found a problem? See [SECURITY.md](SECURITY.md).
+Found a problem? Please report it privately. See [SECURITY.md](SECURITY.md).
 
 ## Privacy and the law
 
