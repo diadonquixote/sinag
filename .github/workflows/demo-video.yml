@@ -1,0 +1,78 @@
+name: Demo video
+
+# Records the product demo video with made-up data and publishes it to the
+# demo-video-output branch. Runs only on the demo-video branch; never on v1.
+
+on:
+  push:
+    branches: [demo-video]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: demo-video
+  cancel-in-progress: true
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sinag
+          POSTGRES_PASSWORD: sinag
+          POSTGRES_DB: sinag_demo
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sinag"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://sinag:sinag@localhost:5432/sinag_demo
+      AUTH_SECRET: demo-video-only-secret-not-used-anywhere-else-0123456789
+      NEXT_PUBLIC_ORG_NAME: SK ng Barangay Halimbawa
+      SEED_PASSWORD: demo-video-password
+      SINAG_STAGE: demo
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci || npm install --no-audit --no-fund
+      - run: npm run db:setup && npm run db:seed
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: which ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+      - name: Start the site
+        run: |
+          nohup npm run start -- -p 3100 > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3100/ >/dev/null && break; sleep 2; done
+      - name: Record
+        run: node scripts/demo-video/record.mjs
+        env:
+          BASE_URL: http://localhost:3100
+          OUT_DIR: demo-out
+      - name: Publish to the demo-video-output branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir pub
+          cp demo-out/sinag-demo.mp4 demo-out/log.txt pub/ 2>/dev/null || true
+          cp server.log pub/ 2>/dev/null || true
+          echo '{"git":{"deploymentEnabled":false}}' > pub/vercel.json
+          cd pub
+          git init -q -b demo-video-output
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Demo video from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" demo-video-output
