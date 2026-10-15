@@ -51,8 +51,9 @@ known password. Close the terminal afterwards so the connection string does not 
 ## 4. Check it
 
 - Open the site logged out, on a phone. Every page should load, with the pilot banner on top.
-- Log in as the site admin. Send the council the `/request-access` link, and approve the real
-  Chairperson first, checking each request against the official list of elected officials.
+- Log in as the site admin and create the real Chairperson's account, after checking them
+  against the official list of elected officials. Send them the temporary password privately.
+  The Chairperson then adds the rest of the council from the Team page.
 - Read `/privacy` with the council. It says the council is responsible for what is published.
 
 ## Upgrading

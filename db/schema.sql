@@ -52,6 +52,9 @@ alter table users add column if not exists session_version int not null default 
 -- When this person agreed to the privacy notice, and which version of it.
 alter table users add column if not exists privacy_accepted_at timestamptz;
 alter table users add column if not exists privacy_version text;
+-- Accounts are created by the site admin or the Chairperson with a temporary password;
+-- the person must choose their own before using their desk.
+alter table users add column if not exists must_change_password boolean not null default false;
 
 create table if not exists settings (
   key text primary key,

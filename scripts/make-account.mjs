@@ -1,11 +1,11 @@
 // Creates the first account on a fresh database, or gives an existing account a role.
 //
-//   npm run db:admin    the site admin, who approves everyone else's account requests
+//   npm run db:admin    the site admin, who creates the SK Chairperson's account
 //   npm run db:chair    the SK Chairperson, for a council that runs without a separate admin
 //
-// Officials ask for accounts on the site, but a request only works once someone approves it,
-// so a brand-new database has no way in. This is that way in. Run it once, log in, and
-// approve the rest from the Accounts page.
+// There is no sign-up: the admin creates the Chairperson's account, and the Chairperson adds
+// the rest of the council. A brand-new database has nobody to start that chain, and this is
+// that first step. Run it once, then log in.
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -84,8 +84,8 @@ try {
     if (count > 1) console.log(`\n  Note: there are now ${count} chairperson accounts. Usually there should be one.`);
   }
   console.log(ROLE === "admin"
-    ? "  Log in, then approve the council's requests from the Accounts page.\n"
-    : "  Log in. Officials can ask for accounts at /request-access; a site admin approves them.\n");
+    ? "  Log in, then create the SK Chairperson's account from the Accounts page.\n"
+    : "  Log in, then add your secretary, treasurer and kagawads from the Team page.\n");
 } catch (err) {
   if (err instanceof Cancelled) {
     console.log("\n  Nothing changed.\n");

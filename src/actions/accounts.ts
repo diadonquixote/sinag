@@ -8,8 +8,10 @@ import { audit } from "@/lib/audit";
 import { ASSIGNABLE_ROLES, ROLE_LABEL, type Role } from "@/lib/roles";
 
 /**
- * The site admin's account desk. The admin decides who gets in and with which role,
- * and nothing else: it cannot publish, approve budgets or appear on the council page.
+ * The site admin's account desk. Nobody signs up: the admin creates the Chairperson's account
+ * (and any other the council needs), and the Chairperson adds the rest of the council from the
+ * Team page. The admin decides who gets in and with which role, and nothing else: it cannot
+ * publish, approve budgets or appear on the council page.
  */
 
 const PATH = "/dashboard/admin";
@@ -89,11 +91,11 @@ export async function resetPassword(fd: FormData): Promise<void> {
   const password = String(fd.get("password") ?? "");
   if (password.length < 8) back(PATH, "err", "The temporary password needs at least 8 characters.");
   const hash = await bcrypt.hash(password, 10);
-  const [u] = await sql<Row[]>`update users set password_hash = ${hash} where id = ${id} and status <> 'removed' returning name`;
+  const [u] = await sql<Row[]>`update users set password_hash = ${hash}, must_change_password = true where id = ${id} and status <> 'removed' returning name`;
   if (!u) back(PATH, "err", "That account was not found.");
   await revokeSessions(id); // whoever was logged in with the old password is logged out
   await audit(admin.id, "reset password", "user", id, u.name as string);
-  back(PATH, "ok", `New temporary password set for ${u.name}, and every device they were logged in on has been logged out. Share the password privately; they can change it under Profile.`);
+  back(PATH, "ok", `New temporary password set for ${u.name}, and every device they were logged in on has been logged out. Share the password privately; they will be asked to choose a new one when they log in.`);
 }
 
 /** For someone the admin already knows, without waiting for them to fill in the request form. */
@@ -113,11 +115,11 @@ export async function createAccount(fd: FormData): Promise<void> {
 
   const hash = await bcrypt.hash(password, 10);
   const [created] = await sql<Row[]>`
-    insert into users (name, email, password_hash, role, status, reviewed_by, reviewed_at)
-    values (${name.slice(0, 120)}, ${email}, ${hash}, ${role}, 'active', ${admin.id}, now())
+    insert into users (name, email, password_hash, role, status, reviewed_by, reviewed_at, must_change_password)
+    values (${name.slice(0, 120)}, ${email}, ${hash}, ${role}, 'active', ${admin.id}, now(), true)
     returning id`;
   await audit(admin.id, "created account", "user", created.id as number, `${name} (${role})`);
-  back(PATH, "ok", `Account created for ${name}. Share the temporary password with them privately.${await chairNote()}`);
+  back(PATH, "ok", `Account created for ${name}. Send them the temporary password privately; they will be asked to choose their own the first time they log in.${await chairNote()}`);
 }
 
 /**

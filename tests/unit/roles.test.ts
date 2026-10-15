@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACCOUNT_STATUS, ASSIGNABLE_ROLES, isOfficial, OFFICIAL_ROLES, ROLE_HOME, ROLE_LABEL } from "@/lib/roles";
+import { ACCOUNT_STATUS, ASSIGNABLE_ROLES, isOfficial, OFFICIAL_ROLES, ROLE_HOME, ROLE_LABEL, TEAM_LIMITS, TEAM_ROLES } from "@/lib/roles";
 
 describe("roles", () => {
   it("never lists the site admin as an elected official", () => {
@@ -17,5 +17,11 @@ describe("roles", () => {
     for (const status of ["pending", "active", "disabled", "former", "removed"]) {
       expect(ACCOUNT_STATUS[status]?.label).toBeTruthy();
     }
+  });
+  it("lets a Chairperson add only the rest of the council, never another Chairperson or an admin", () => {
+    expect([...TEAM_ROLES].sort()).toEqual(["kagawad", "secretary", "treasurer"]);
+    expect(TEAM_ROLES).not.toContain("chairperson");
+    expect(TEAM_ROLES).not.toContain("admin");
+    expect(TEAM_LIMITS).toEqual({ secretary: 1, treasurer: 1, kagawad: 7 });
   });
 });

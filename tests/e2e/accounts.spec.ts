@@ -1,9 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * The whole account life cycle, with real cookies in a real browser:
- * request -> pending -> admin approves -> log in -> password change logs out other devices
- * -> admin turns the account off -> logged out everywhere.
+ * The whole account life cycle, with real cookies in a real browser. There is no sign-up:
+ * the admin creates a Chairperson -> the Chairperson must choose their own password -> the
+ * Chairperson adds a kagawad -> the kagawad must choose their own password -> a password change
+ * logs out other devices -> the admin turns the account off -> logged out everywhere.
  * Runs once (desktop), since it changes the database.
  */
 const PASSWORD = process.env.SEED_PASSWORD ?? "";
@@ -17,44 +18,67 @@ async function login(page: Page, email: string, password: string) {
   await page.waitForURL((url) => url.pathname !== "/login" || url.search.includes("err=") || url.search.includes("ok="));
 }
 
-test("an official asks for an account, is approved, and can be logged out everywhere", async ({ browser }, info) => {
+async function chooseFirstPassword(page: Page, temporary: string, mine: string) {
+  await expect(page.getByRole("heading", { name: "Choose your own password" })).toBeVisible();
+  await page.getByLabel("Temporary password", { exact: true }).fill(temporary);
+  await page.getByLabel("New password", { exact: true }).fill(mine);
+  await page.getByRole("button", { name: "Save my password" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Password changed" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Choose your own password" })).toHaveCount(0);
+}
+
+test("there is no public sign-up form", async ({ page }) => {
+  await page.goto("/request-access");
+  await expect(page.getByRole("heading", { name: "How officials get an account" })).toBeVisible();
+  await expect(page.locator("form input[type=password]")).toHaveCount(0);
+});
+
+test("the admin adds a Chairperson, who adds their council; both choose their own passwords", async ({ browser }, info) => {
   test.skip(info.project.name !== "desktop", "changes the database; run once");
   test.skip(!PASSWORD, "needs SEED_PASSWORD (the demo data)");
 
   const stamp = Date.now();
+  const chairEmail = `chair.${stamp}@test.ph`;
   const email = `kagawad.${stamp}@test.ph`;
   const name = `Rina Test ${stamp}`;
-  const first = await browser.newContext();
-  const page = await first.newPage();
 
-  // 1. Request
-  await page.goto("/request-access");
-  await page.getByLabel("Full name", { exact: true }).fill(name);
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Position", { exact: true }).selectOption("kagawad");
-  await page.getByLabel("How can the admin confirm it is you?", { exact: true }).fill("Elected SK Kagawad, 2023. Ask the Chairperson.");
-  await page.getByLabel("Password", { exact: true }).fill("first-password-123");
-  await page.locator('input[name="confirm"]').check();
-  await page.locator('input[name="privacy"]').check();
-  await page.getByRole("button", { name: "Send request" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Request sent" })).toBeVisible();
-
-  // 2. Not yet
-  await login(page, email, "first-password-123");
-  await expect(page.getByRole("alert").filter({ hasText: "waiting for the site admin" })).toBeVisible();
-
-  // 3. The admin approves
+  // 1. The admin creates the Chairperson's account
   const adminCtx = await browser.newContext();
   const admin = await adminCtx.newPage();
   await login(admin, "admin@sinag.demo", PASSWORD);
   await expect(admin).toHaveURL(/\/dashboard\/admin/);
-  const card = admin.locator("li", { hasText: name });
-  await expect(card).toContainText(email);
-  await card.getByRole("button", { name: "Approve" }).click();
-  await expect(admin.getByRole("status").filter({ hasText: "can now log in" })).toBeVisible();
+  const create = admin.locator("form").filter({ has: admin.getByRole("button", { name: "Create account" }) });
+  await create.getByLabel("Name", { exact: true }).fill(`Chair Test ${stamp}`);
+  await create.getByLabel("Email", { exact: true }).fill(chairEmail);
+  await create.getByLabel("Position", { exact: true }).selectOption("chairperson");
+  await create.getByLabel("Temporary password", { exact: true }).fill("chair-temporary-1");
+  await create.getByRole("button", { name: "Create account" }).click();
+  await expect(admin.getByRole("status").filter({ hasText: "Account created" })).toBeVisible();
 
-  // 4. Now they can log in, and they are on the public council page
+  // 2. The Chairperson logs in and must replace the temporary password first
+  const chairCtx = await browser.newContext();
+  const chair = await chairCtx.newPage();
+  await login(chair, chairEmail, "chair-temporary-1");
+  await chooseFirstPassword(chair, "chair-temporary-1", "chair-own-password-1");
+
+  // 3. The Chairperson adds a kagawad from the Team page
+  await chair.goto("/dashboard/team");
+  const add = chair.locator("form").filter({ has: chair.getByRole("button", { name: "Add official" }) });
+  await add.getByLabel("Full name", { exact: true }).fill(name);
+  await add.getByLabel("Email", { exact: true }).fill(email);
+  await add.getByLabel("Position", { exact: true }).selectOption("kagawad");
+  await add.getByLabel("Temporary password", { exact: true }).fill("first-password-123");
+  await add.getByRole("button", { name: "Add official" }).click();
+  await expect(chair.getByRole("status").filter({ hasText: "can now log in" })).toBeVisible();
+  await expect(chair.locator("li", { hasText: name })).toContainText("Has not logged in yet");
+
+  // 4. The kagawad logs in, chooses their own password, and is on the public council page
+  const first = await browser.newContext();
+  const page = await first.newPage();
   await login(page, email, "first-password-123");
+  await expect(page).toHaveURL(/\/dashboard/);
+  await chooseFirstPassword(page, "first-password-123", "my-own-password-1");
+  await page.goto("/dashboard/kagawad");
   await expect(page).toHaveURL(/\/dashboard\/kagawad/);
   await page.goto("/council");
   await expect(page.getByRole("link", { name: new RegExp(name) }).first()).toBeVisible();
@@ -62,9 +86,9 @@ test("an official asks for an account, is approved, and can be logged out everyw
   // 5. A second device logs in; changing the password on it logs the first device out
   const secondCtx = await browser.newContext();
   const second = await secondCtx.newPage();
-  await login(second, email, "first-password-123");
+  await login(second, email, "my-own-password-1");
   await second.goto("/dashboard/profile");
-  await second.getByLabel("Current password", { exact: true }).fill("first-password-123");
+  await second.getByLabel("Current password", { exact: true }).fill("my-own-password-1");
   await second.getByLabel("New password", { exact: true }).fill("second-password-456");
   await second.getByRole("button", { name: "Change password" }).click();
   await expect(second.getByRole("status").filter({ hasText: "logged out" })).toBeVisible();
@@ -84,7 +108,7 @@ test("an official asks for an account, is approved, and can be logged out everyw
   await login(second, email, "second-password-456");
   await expect(second.getByRole("alert").filter({ hasText: "not active" })).toBeVisible();
 
-  await Promise.all([first.close(), adminCtx.close(), secondCtx.close()]);
+  await Promise.all([first.close(), adminCtx.close(), chairCtx.close(), secondCtx.close()]);
 });
 
 test("the official desks refuse the wrong role", async ({ page }, info) => {

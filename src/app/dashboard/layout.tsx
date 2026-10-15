@@ -7,6 +7,7 @@ import { isOfficial, ROLE_LABEL, type Role } from "@/lib/roles";
 import Avatar from "@/components/Avatar";
 import ProfileNudge from "@/components/ProfileNudge";
 import { DeskTabs, type NavItem } from "@/components/NavLinks";
+import FirstPassword from "@/components/FirstPassword";
 
 const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
   chairperson: [
@@ -24,7 +25,7 @@ const NAV: Record<Role, (NavItem & { exact?: boolean })[]> = {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireRole();
-  const [me] = await sql<Row[]>`select committee, bio, purok, privacy_version from users where id = ${user.id}`;
+  const [me] = await sql<Row[]>`select committee, bio, purok, privacy_version, must_change_password from users where id = ${user.id}`;
   const tabs = [...NAV[user.role], { href: "/dashboard/profile", label: "Profile" }];
   // Minutes and report pages belong to the Minutes / Finance tabs.
   const withDocs = tabs.map((t) =>
@@ -57,8 +58,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </form>
         </div>
       )}
-      {missing.length > 0 && <ProfileNudge missing={missing} />}
-      <div className="container-x py-8 sm:py-10">{children}</div>
+      {missing.length > 0 && !me?.must_change_password && <ProfileNudge missing={missing} />}
+      <div className="container-x py-8 sm:py-10">{me?.must_change_password ? <FirstPassword /> : children}</div>
     </>
   );
 }

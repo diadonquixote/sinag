@@ -7,11 +7,9 @@ import { createSession, destroySession, requireRole, revokeSessions } from "@/li
 import { PRIVACY_VERSION } from "@/lib/privacy";
 import { back } from "@/lib/flash";
 import { audit } from "@/lib/audit";
-import { OFFICIAL_ROLES, ROLE_HOME, type Role } from "@/lib/roles";
-import { clearLoginAttempts, clientAddress, loginBlockedMinutes, noteRequest, recordFailedLogin, tooManyRequests } from "@/lib/rate-limit";
+import { ROLE_HOME, type Role } from "@/lib/roles";
+import { clearLoginAttempts, clientAddress, loginBlockedMinutes, recordFailedLogin } from "@/lib/rate-limit";
 import { getT } from "@/lib/i18n";
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 let dummyHash: string | null = null;
 
@@ -50,44 +48,6 @@ export async function logout(): Promise<void> {
   redirect("/");
 }
 
-/**
- * An elected official asks for an account. It is created as 'pending' and does nothing
- * until the site admin checks them against the list of elected officials and approves it.
- */
-export async function requestAccess(fd: FormData): Promise<void> {
-  const path = "/request-access";
-  const name = String(fd.get("name") ?? "").trim();
-  const email = String(fd.get("email") ?? "").trim().toLowerCase();
-  const role = String(fd.get("role") ?? "") as Role;
-  const note = String(fd.get("note") ?? "").trim();
-  const password = String(fd.get("password") ?? "");
-  const { t } = await getT();
-
-  if (name.length < 2) back(path, "err", t("req.name"));
-  if (!EMAIL.test(email)) back(path, "err", t("req.email"));
-  if (!OFFICIAL_ROLES.includes(role)) back(path, "err", t("req.position"));
-  if (note.length < 5) back(path, "err", t("req.note"));
-  if (password.length < 8) back(path, "err", t("req.password"));
-  if (fd.get("confirm") !== "on") back(path, "err", t("req.confirm"));
-  if (fd.get("privacy") !== "on") back(path, "err", t("req.privacy"));
-
-  const address = await clientAddress();
-  if (await tooManyRequests(address)) back(path, "err", t("req.tooMany"));
-
-  const existing = await sql<Row[]>`select 1 as x from users where lower(email) = ${email}`;
-  if (existing.length > 0) back(path, "err", t("req.exists"));
-
-  const hash = await bcrypt.hash(password, 10);
-  const [created] = await sql<Row[]>`
-    insert into users (name, email, password_hash, role, status, request_note, privacy_accepted_at, privacy_version)
-    values (${name.slice(0, 120)}, ${email}, ${hash}, ${role}, 'pending', ${note.slice(0, 500)}, now(), ${PRIVACY_VERSION})
-    returning id
-  `;
-  await noteRequest(address);
-  await audit(created.id as number, "requested an account", "user", created.id as number, `${name} (${role})`);
-  back("/login", "ok", t("req.sent"));
-}
-
 /** Officials can change their own password. */
 export async function changePassword(fd: FormData): Promise<void> {
   const user = await requireRole();
@@ -100,7 +60,7 @@ export async function changePassword(fd: FormData): Promise<void> {
     back("/dashboard/profile", "err", "Your current password is not correct.");
   }
   const hash = await bcrypt.hash(next, 10);
-  await sql`update users set password_hash = ${hash} where id = ${user.id}`;
+  await sql`update users set password_hash = ${hash}, must_change_password = false where id = ${user.id}`;
   // Anyone else logged in as this person, on any device, is logged out. This device stays in.
   const version = await revokeSessions(user.id);
   await createSession({ ...user, sessionVersion: version });

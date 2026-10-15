@@ -19,3 +19,6 @@ export const SOURCE_URL = (process.env.NEXT_PUBLIC_SOURCE_URL || "").trim() || "
 
 /** PDYN Technologies' public contact address. */
 export const PDYN_EMAIL = "pdyntechnology@gmail.com";
+
+/** Where a Chairperson asks for their account. Set SITE_ADMIN_EMAIL if someone other than PDYN runs the site. */
+export const ADMIN_EMAIL = (process.env.SITE_ADMIN_EMAIL || "").trim() || PDYN_EMAIL;

@@ -26,11 +26,18 @@ All of them read `DATABASE_URL` from the terminal (`export DATABASE_URL='...'`) 
 
 ## Accounts
 
-Everything is on the admin's **Accounts** page:
+Nobody can sign up. The site admin creates the **SK Chairperson's** account, and the
+Chairperson adds the secretary, treasurer and kagawads from their **Team** page (at most one
+secretary, one treasurer and seven kagawads active at once). Every new account starts with a
+temporary password, sent privately, which the person must replace the first time they log in.
+`/request-access` only explains this; it has no form, so there is no request queue to flood.
 
-- **Requests** from `/request-access`. Check each against the official list before approving.
-  Unanswered requests are deleted after 30 days.
+The admin's **Accounts** page:
+
+- **Create an account**: the Chairperson first, checked against the official list of elected
+  officials. The admin can create any other account too.
 - **Reset password** sets a temporary one and logs the person out everywhere. Share it privately.
+  The Chairperson can do the same for their own team from the Team page.
 - **Turn off account** logs them out at once. Their records stay.
 - **Term ended** for an outgoing official: logged out, listed as a former official.
 - **Remove** erases email, password, phone, photo and profile; the name stays only on what they
@@ -43,9 +50,9 @@ can reset the password.
 
 When a new council takes office:
 
-1. The new officials request accounts; approve them against the official list. The new
-   Chairperson first.
-2. Mark each outgoing official **Term ended**.
+1. Mark each outgoing official **Term ended**.
+2. Create the new Chairperson's account, checked against the official list. They add the rest
+   of their council from the Team page.
 3. If the admin role changes hands: add the new admin on the Accounts page, have them log in,
    then they turn the old admin's account off.
 4. Hand over the accounts behind the site. Write down who holds each one:
