@@ -38,6 +38,7 @@ jobs:
     env:
       DATABASE_URL: postgres://sinag:sinag@localhost:5432/sinag_ci
       AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+      PHOTO_ENCRYPTION_KEY: Y2ktb25seS1waG90by1rZXktMzItYnl0ZXMtISEhISE=
       NEXT_PUBLIC_ORG_NAME: SK ng Barangay CI
       SEED_PASSWORD: ci-demo-password
       NEXT_TELEMETRY_DISABLED: "1"

@@ -1,4 +1,4 @@
-import { imageResponse } from "@/lib/image-response";
+import { servePhoto } from "@/lib/image-response";
 import { sql, type Row } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { isOfficial } from "@/lib/roles";
@@ -22,5 +22,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   // The URL carries ?v=<last change>, so the browser can keep the photo until it changes.
-  return imageResponse(row.avatar as Buffer, row.avatar_type as string, `${publicPhoto ? "public" : "private"}, max-age=31536000, immutable`);
+  return servePhoto(row.avatar as Buffer, row.avatar_type as string, `${publicPhoto ? "public" : "private"}, max-age=31536000, immutable`);
 }

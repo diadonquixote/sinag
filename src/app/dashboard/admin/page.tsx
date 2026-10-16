@@ -32,39 +32,65 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
       order by case status when 'active' then 0 when 'disabled' then 1 else 2 end, case role when 'admin' then 0 when 'chairperson' then 1 when 'secretary' then 2 when 'treasurer' then 3 else 4 end, name`,
   ]);
 
+  const hasChair = accounts.some((a) => a.role === "chairperson" && a.status === "active");
+  const adminCount = accounts.filter((a) => a.role === "admin" && a.status === "active").length;
+
   return (
     <div className="space-y-12">
       <Flash sp={sp} />
-      <section>
-        <PageHeader eyebrow="Site admin" title="Account requests" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>
-          Officials ask for an account at <b>/request-access</b>. Check each one against the official list of elected SK officials before you approve. Approving puts their name and position on the public council page. Requests left unanswered for {PENDING_REQUEST_DAYS} days are deleted.
-        </PageHeader>
-        {pending.length === 0 ? <Empty size="sm">No requests waiting.</Empty> : (
-          <ul className="space-y-3">
-            {pending.map((u) => (
-              <li key={u.id} className="card space-y-3 sm:p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="min-w-0"><b className="font-semibold">{u.name}</b> <span className="text-sm text-slate-500">asks to be {ROLE_LABEL[u.role as Role]}</span></p>
-                  <span className="text-xs text-slate-400">{timeAgo(u.created_at)}</span>
-                </div>
-                <p className="break-all text-sm text-slate-500">{u.email}</p>
-                {u.request_note && <p className="whitespace-pre-line rounded-lg bg-mist px-3 py-2 text-sm text-slate-700">{u.request_note}</p>}
-                <div className="flex flex-wrap items-end gap-2">
-                  <form action={approveAccount} className="flex flex-wrap items-end gap-2">
-                    <input type="hidden" name="id" value={u.id} />
-                    <div><label className="label text-xs" htmlFor={`approve-role-${u.id}`}>Approve as</label><RoleSelect id={`approve-role-${u.id}`} value={u.role} /></div>
-                    <SubmitButton pending="Approving...">Approve</SubmitButton>
-                  </form>
-                  <form action={rejectAccount}>
-                    <input type="hidden" name="id" value={u.id} />
-                    <SubmitButton className="btn-outline text-flag-red" pending="Removing...">Turn down</SubmitButton>
-                  </form>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {!hasChair && (
+        <div role="alert" className="max-w-2xl rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+          <b>There is no active Chairperson.</b> Nothing can be approved or published, and nobody can add the council, until you create the next Chairperson below. Everything already published stays online.
+        </div>
+      )}
+      {adminCount < 2 && (
+        <div role="note" className="max-w-2xl rounded-lg border border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">
+          <b>You are the only site admin.</b> If you lose your password or leave, nobody can create accounts here. Name a second admin now (see docs/TURNOVER.md); until then, <code>npm run db:admin</code> can create one from the server.
+        </div>
+      )}
+      <PageHeader eyebrow="Site admin" title="Accounts" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>
+        Nobody can sign up on their own. You create the SK Chairperson&apos;s account below, after checking them against the official list of elected officials. The Chairperson then adds the secretary, treasurer and kagawads from their Team page. You can still create or fix any account here.
+      </PageHeader>
+
+      <form action={createAccount} className="card max-w-xl space-y-3">
+        <h2 className="text-lg font-bold">Create an account</h2>
+        <p className="hint mt-0">Start with the Chairperson. Send the temporary password privately; they will be asked to choose their own the first time they log in. Their name and position appear on the public council page.</p>
+        <div><label className="label" htmlFor="new-name">Name</label><input id="new-name" name="name" required className="input" /></div>
+        <div><label className="label" htmlFor="new-email">Email</label><input id="new-email" name="email" type="email" required className="input" /></div>
+        <div><label className="label" htmlFor="new-role">Position</label><RoleSelect id="new-role" value="chairperson" /></div>
+        <div><label className="label" htmlFor="new-password">Temporary password</label><input id="new-password" name="password" type="text" required minLength={8} autoComplete="off" className="input" /></div>
+        <SubmitButton pending="Creating...">Create account</SubmitButton>
+      </form>
+
+      {pending.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-xl font-bold">Old account requests</h2>
+          <p className="hint mb-4 mt-0">From before sign-up was closed. Approve only someone you have checked against the official list; unanswered requests are deleted after {PENDING_REQUEST_DAYS} days.</p>
+            <ul className="space-y-3">
+              {pending.map((u) => (
+                <li key={u.id} className="card space-y-3 sm:p-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="min-w-0"><b className="font-semibold">{u.name}</b> <span className="text-sm text-slate-500">asks to be {ROLE_LABEL[u.role as Role]}</span></p>
+                    <span className="text-xs text-slate-400">{timeAgo(u.created_at)}</span>
+                  </div>
+                  <p className="break-all text-sm text-slate-500">{u.email}</p>
+                  {u.request_note && <p className="whitespace-pre-line rounded-lg bg-mist px-3 py-2 text-sm text-slate-700">{u.request_note}</p>}
+                  <div className="flex flex-wrap items-end gap-2">
+                    <form action={approveAccount} className="flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="id" value={u.id} />
+                      <div><label className="label text-xs" htmlFor={`approve-role-${u.id}`}>Approve as</label><RoleSelect id={`approve-role-${u.id}`} value={u.role} /></div>
+                      <SubmitButton pending="Approving...">Approve</SubmitButton>
+                    </form>
+                    <form action={rejectAccount}>
+                      <input type="hidden" name="id" value={u.id} />
+                      <SubmitButton className="btn-outline text-flag-red" pending="Removing...">Turn down</SubmitButton>
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-1 text-xl font-bold">Accounts</h2>
@@ -134,22 +160,13 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
       <section className="card max-w-2xl space-y-2 sm:p-6">
         <h2 className="text-lg font-bold">When the term ends</h2>
         <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
-          <li>The new council asks for accounts at /request-access, and you approve them against the official list.</li>
           <li>Mark each outgoing official <b>Term ended</b>. They are logged out and listed as former officials; everything they published stays.</li>
-          <li>If you are handing the admin role over too: add the new admin below, let them log in, and have them mark your account as turned off.</li>
+          <li>Create the new Chairperson&apos;s account above, after checking the official list. They add the rest of their council from their Team page.</li>
+          <li>If you are handing the admin role over too: create the new admin above, let them log in, and have them turn off your account. You cannot turn off your own, so the site always has an admin. Full checklist: docs/TURNOVER.md.</li>
           <li>Hand over the hosting, database and code accounts as well. The checklist is in docs/OPERATIONS.md.</li>
         </ol>
       </section>
 
-      <form action={createAccount} className="card max-w-xl space-y-3">
-        <h2 className="text-lg font-bold">Add an account yourself</h2>
-        <p className="hint mt-0">For someone you have already confirmed. Share the temporary password privately; they can change it under Profile.</p>
-        <div><label className="label" htmlFor="new-name">Name</label><input id="new-name" name="name" required className="input" /></div>
-        <div><label className="label" htmlFor="new-email">Email</label><input id="new-email" name="email" type="email" required className="input" /></div>
-        <div><label className="label" htmlFor="new-role">Position</label><RoleSelect id="new-role" value="secretary" /></div>
-        <div><label className="label" htmlFor="new-password">Temporary password</label><input id="new-password" name="password" type="text" required minLength={8} autoComplete="off" className="input" /></div>
-        <SubmitButton pending="Creating...">Create account</SubmitButton>
-      </form>
     </div>
   );
 }

@@ -6,6 +6,14 @@ export type Role = "chairperson" | "secretary" | "treasurer" | "kagawad" | "kaba
  */
 export const OFFICIAL_ROLES: Role[] = ["chairperson", "secretary", "treasurer", "kagawad"];
 
+/**
+ * The positions a Chairperson can add to their own council, and how many of each can be
+ * active at once (RA 10742: one Chairperson, seven kagawads, an appointed secretary and treasurer).
+ * The site admin is not limited by this and creates the Chairperson's own account.
+ */
+export const TEAM_LIMITS: Partial<Record<Role, number>> = { secretary: 1, treasurer: 1, kagawad: 7 };
+export const TEAM_ROLES = Object.keys(TEAM_LIMITS) as Role[];
+
 /** Every role the site admin can give an account. */
 export const ASSIGNABLE_ROLES: Role[] = ["chairperson", "secretary", "treasurer", "kagawad", "admin"];
 

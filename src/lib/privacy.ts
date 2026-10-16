@@ -4,7 +4,7 @@
  * Bump PRIVACY_VERSION whenever the privacy notice changes in substance. Officials who agreed
  * to an older version are asked to read it again on their next visit to their desk.
  */
-export const PRIVACY_VERSION = "2026-10-14";
+export const PRIVACY_VERSION = "2026-10-15";
 
 /**
  * Who answers privacy questions for this council: the Data Protection Officer, or the barangay

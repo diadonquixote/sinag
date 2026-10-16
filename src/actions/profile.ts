@@ -7,6 +7,7 @@ import { audit } from "@/lib/audit";
 import { isOfficial } from "@/lib/roles";
 import { normalizePhone } from "@/lib/format";
 import { decodeImage } from "@/lib/images";
+import { encryptPhoto } from "@/lib/crypto";
 
 const PAGE = "/dashboard/profile";
 const MAX_PHOTO_BYTES = 300 * 1024; // the browser shrinks photos to about 30–60 KB before sending
@@ -69,7 +70,7 @@ export async function updatePhoto(fd: FormData): Promise<void> {
   const img = decodeImage(data, MAX_PHOTO_BYTES);
   if (!img) back(PAGE, "err", "That file does not look like a photo, or it is too large. Try a different one.");
 
-  await sql`update users set avatar = ${img.bytes}, avatar_type = ${img.type}, avatar_updated_at = now() where id = ${user.id}`;
+  await sql`update users set avatar = ${encryptPhoto(img.bytes)}, avatar_type = ${img.type}, avatar_updated_at = now() where id = ${user.id}`;
   await audit(user.id, "changed profile photo", "user", user.id);
   back(PAGE, "ok", "Photo updated.");
 }

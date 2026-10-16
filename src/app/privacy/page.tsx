@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/ui";
 import { getT } from "@/lib/i18n";
 import { ORG_NAME } from "@/lib/org";
-import { PENDING_REQUEST_DAYS, PRIVACY_VERSION, privacyContact } from "@/lib/privacy";
+import { PRIVACY_VERSION, privacyContact } from "@/lib/privacy";
 import { PDYN_EMAIL } from "@/lib/site";
 import { PrivacyEn, PrivacyFil } from "./notice";
 
@@ -23,7 +23,7 @@ export default async function PrivacyPage() {
   ) : (
     <>The council has not yet named its privacy officer. Until it does, contact the SK directly, or write to the people who run this site at <a href={`mailto:${PDYN_EMAIL}`} className="font-semibold text-flag-blue underline">{PDYN_EMAIL}</a>, who will pass it to the council.</>
   );
-  const props = { org: ORG_NAME, contact, version: PRIVACY_VERSION, pendingDays: PENDING_REQUEST_DAYS };
+  const props = { org: ORG_NAME, contact, version: PRIVACY_VERSION };
   return (
     <div className="container-x py-10 sm:py-12">
       <div className="max-w-3xl">

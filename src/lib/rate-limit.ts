@@ -76,26 +76,3 @@ export async function clearLoginAttempts(email: string, address: string): Promis
     // Not worth failing a successful login over.
   }
 }
-
-/**
- * Account requests, counted per connection in the same table, so the request form
- * cannot be used to flood the admin's approval list.
- */
-const MAX_REQUESTS_PER_HOUR = 5;
-
-export async function tooManyRequests(address: string): Promise<boolean> {
-  if (!address) return false;
-  const [row] = await sql<Row[]>`
-    select count(*)::int as n from login_attempts
-    where scope = ${`request:${address}`} and created_at > now() - interval '1 hour'`;
-  return Number(row?.n ?? 0) >= MAX_REQUESTS_PER_HOUR;
-}
-
-export async function noteRequest(address: string): Promise<void> {
-  if (!address) return;
-  try {
-    await sql`insert into login_attempts (scope) values (${`request:${address}`})`;
-  } catch {
-    // Bookkeeping only.
-  }
-}

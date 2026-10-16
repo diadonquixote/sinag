@@ -18,11 +18,11 @@ export type FundSummary = {
  * Every figure is read from the database as exact text and added up in whole centavos
  * (see money.ts), so "available" is never off by a rounding error.
  */
-export async function fundSummary(): Promise<FundSummary> {
-  const [setting] = await sql<Row[]>`select value from settings where key = 'total_fund'`;
+export async function fundSummary(db: typeof sql = sql): Promise<FundSummary> {
+  const [setting] = await db<Row[]>`select value from settings where key = 'total_fund'`;
   const total = toCentavos(String(setting?.value ?? "0"));
 
-  const [ledger] = await sql<Row[]>`
+  const [ledger] = await db<Row[]>`
     select
       coalesce(sum(amount) filter (where kind = 'income'), 0)::text as income,
       coalesce(sum(amount) filter (where kind = 'expense'), 0)::text as expense
@@ -30,7 +30,7 @@ export async function fundSummary(): Promise<FundSummary> {
     where voided_at is null
   `;
 
-  const [commit] = await sql<Row[]>`
+  const [commit] = await db<Row[]>`
     select coalesce(sum(greatest(p.budget - coalesce(e.spent, 0), 0)), 0)::text as committed
     from projects p
     left join (
@@ -40,15 +40,25 @@ export async function fundSummary(): Promise<FundSummary> {
     where p.status in ('approved', 'scheduled', 'ongoing')
   `;
 
-  const income = toCentavos(ledger.income as string);
-  const expense = toCentavos(ledger.expense as string);
-  const committed = toCentavos(commit.committed as string);
-  const available = total + income - expense - committed;
+  return summarizeFund({
+    total,
+    income: toCentavos(ledger.income as string),
+    expense: toCentavos(ledger.expense as string),
+    committed: toCentavos(commit.committed as string),
+  });
+}
+
+/**
+ * The arithmetic on its own, in whole centavos, so it can be tested without a database:
+ * available = annual fund + other income - spent - committed to funded projects.
+ */
+export function summarizeFund(c: { total: number; income: number; expense: number; committed: number }): FundSummary {
+  const available = c.total + c.income - c.expense - c.committed;
   return {
-    total: toPesos(total),
-    income: toPesos(income),
-    expense: toPesos(expense),
-    committed: toPesos(committed),
+    total: toPesos(c.total),
+    income: toPesos(c.income),
+    expense: toPesos(c.expense),
+    committed: toPesos(c.committed),
     available: toPesos(available),
   };
 }

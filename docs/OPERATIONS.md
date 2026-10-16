@@ -26,13 +26,20 @@ All of them read `DATABASE_URL` from the terminal (`export DATABASE_URL='...'`) 
 
 ## Accounts
 
-Everything is on the admin's **Accounts** page:
+Nobody can sign up. The site admin creates the **SK Chairperson's** account, and the
+Chairperson adds the secretary, treasurer and kagawads from their **Team** page (at most one
+secretary, one treasurer and seven kagawads active at once). Every new account starts with a
+temporary password, sent privately, which the person must replace the first time they log in.
+`/request-access` only explains this; it has no form, so there is no request queue to flood.
 
-- **Requests** from `/request-access`. Check each against the official list before approving.
-  Unanswered requests are deleted after 30 days.
+The admin's **Accounts** page:
+
+- **Create an account**: the Chairperson first, checked against the official list of elected
+  officials. The admin can create any other account too.
 - **Reset password** sets a temporary one and logs the person out everywhere. Share it privately.
+  The Chairperson can do the same for their own team from the Team page.
 - **Turn off account** logs them out at once. Their records stay.
-- **Term ended** for an outgoing official: logged out, listed as a former official.
+- **Term ended** for an outgoing official: logged out, listed as a former official. The Chairperson does this for their own team from the Team page; the admin does it for the Chairperson.
 - **Remove** erases email, password, phone, photo and profile; the name stays only on what they
   published in office. Turn the account off first.
 
@@ -41,11 +48,11 @@ can reset the password.
 
 ## End of term
 
-When a new council takes office:
+The full turnover guide, with a checklist, is in [TURNOVER.md](TURNOVER.md). In short, when a new council takes office:
 
-1. The new officials request accounts; approve them against the official list. The new
-   Chairperson first.
-2. Mark each outgoing official **Term ended**.
+1. Mark each outgoing official **Term ended**.
+2. Create the new Chairperson's account, checked against the official list. They add the rest
+   of their council from the Team page.
 3. If the admin role changes hands: add the new admin on the Accounts page, have them log in,
    then they turn the old admin's account off.
 4. Hand over the accounts behind the site. Write down who holds each one:
@@ -65,7 +72,7 @@ When a new council takes office:
 **A password or key was exposed** (pasted into a chat, a screenshot, a commit): replace it, don't
 hope. Database: reset the role's password in Neon, put the new connection string in Vercel's
 `DATABASE_URL`, redeploy. `AUTH_SECRET`: set a new one in Vercel and redeploy; everyone is logged
-out once.
+out once. `PHOTO_ENCRYPTION_KEY`: do not simply replace it, or the stored photos become unreadable; decrypt and re-encrypt them with the new key first.
 
 **Personal data may have been exposed:** the council must notify the National Privacy
 Commission and the people affected within 72 hours of learning of it (IRR Section 38). The steps

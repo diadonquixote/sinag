@@ -21,7 +21,6 @@ export type NoticeProps = {
   org: string;
   contact: ReactNode;
   version: string;
-  pendingDays: number;
 };
 
 const A = ({ href, children }: { href: string; children: ReactNode }) => (
@@ -37,7 +36,7 @@ export function Section({ id, title, children }: { id: string; title: string; ch
   );
 }
 
-export function PrivacyEn({ org, contact, version, pendingDays }: NoticeProps) {
+export function PrivacyEn({ org, contact, version }: NoticeProps) {
   return (
     <>
       <div className="rounded-2xl bg-mist p-5 ring-1 ring-inset ring-slate-200 sm:p-6">
@@ -63,7 +62,7 @@ export function PrivacyEn({ org, contact, version, pendingDays }: NoticeProps) {
           <li><b>About each elected official:</b> name, position, committee, photo, a short bio, term, the credentials and contributions they choose to list, and a record of what they did here (projects led, minutes and reports published, ledger entries recorded).</li>
           <li><b>The council’s records:</b> projects and their budgets, schedules and progress; approved minutes; approved financial reports; the ledger of money in and out; and receipt photos the treasurer has not hidden.</li>
         </ul>
-        <p>Officials are told this before they ask for an account, and they agree to it. Information about a public official acting in office is not private in the way a citizen’s is, but officials still choose what goes on their profile beyond their name and position.</p>
+        <p>Officials are shown this the first time they log in, and they agree to it. Information about a public official acting in office is not private in the way a citizen’s is, but officials still choose what goes on their profile beyond their name and position.</p>
       </Section>
 
       <Section id="private" title="3. What stays private">
@@ -71,7 +70,7 @@ export function PrivacyEn({ org, contact, version, pendingDays }: NoticeProps) {
           <li>Officials’ email addresses, phone numbers and passwords (passwords are stored only as a one-way scramble that nobody can read back).</li>
           <li>Receipts the treasurer marks hidden, for example ones that show a private person’s name or signature.</li>
           <li>Photos of handwritten meeting notes, which only the secretary and the Chairperson can see.</li>
-          <li>Drafts that have not been approved, and the note an official writes when asking for an account.</li>
+          <li>Drafts that have not been approved.</li>
         </ul>
       </Section>
 
@@ -85,7 +84,7 @@ export function PrivacyEn({ org, contact, version, pendingDays }: NoticeProps) {
 
       <Section id="officials" title="5. If you are an official">
         <ul>
-          <li><b>Asking for an account:</b> we collect your name, email, position, password and a note so the site admin can check you against the list of elected officials. A request that is turned down is deleted. A request nobody answers is deleted after {pendingDays} days.</li>
+          <li><b>Getting an account:</b> there is no sign-up. The site admin creates the Chairperson&apos;s account, and the Chairperson adds the rest of the council, with your name, email, position and a temporary password. You replace the password with your own the first time you log in.</li>
           <li><b>Failed log-ins:</b> to stop password guessing, the email address tried and the internet address it came from are kept for up to one day, and cleared as soon as you log in correctly.</li>
           <li><b>When your term ends:</b> you can no longer log in, and you are listed as a former official. What you published in office stays, as part of the public record.</li>
           <li><b>Leaving:</b> the site admin can erase your account. Your email, password, phone, photo and profile are deleted. Your name stays only on records you published while in office.</li>
@@ -125,7 +124,7 @@ export function PrivacyEn({ org, contact, version, pendingDays }: NoticeProps) {
   );
 }
 
-export function PrivacyFil({ org, contact, version, pendingDays }: NoticeProps) {
+export function PrivacyFil({ org, contact, version }: NoticeProps) {
   return (
     <>
       <div className="rounded-2xl bg-mist p-5 ring-1 ring-inset ring-slate-200 sm:p-6">
@@ -151,7 +150,7 @@ export function PrivacyFil({ org, contact, version, pendingDays }: NoticeProps) 
           <li><b>Tungkol sa bawat halal na opisyal:</b> pangalan, posisyon, komite, larawan, maikling bio, termino, ang mga kredensyal at ambag na pinili nilang ilista, at talaan ng ginawa nila rito (mga proyektong pinamahalaan, katitikan at ulat na nailathala, mga tala sa ledger).</li>
           <li><b>Mga rekord ng konseho:</b> mga proyekto at ang badyet, iskedyul at pag-usad nila; inaprubahang katitikan; inaprubahang ulat pampinansiyal; ang ledger ng perang pumasok at lumabas; at mga larawan ng resibo na hindi itinago ng treasurer.</li>
         </ul>
-        <p>Sinasabihan ang mga opisyal tungkol dito bago sila humiling ng account, at pumapayag sila. Hindi pribado ang impormasyon tungkol sa isang opisyal na gumaganap ng tungkulin sa paraang pribado ang sa isang ordinaryong mamamayan, pero ang mga opisyal pa rin ang pumipili kung ano ang ilalagay sa profile nila bukod sa pangalan at posisyon.</p>
+        <p>Ipinapakita ito sa mga opisyal sa una nilang pag-log in, at pumapayag sila. Hindi pribado ang impormasyon tungkol sa isang opisyal na gumaganap ng tungkulin sa paraang pribado ang sa isang ordinaryong mamamayan, pero ang mga opisyal pa rin ang pumipili kung ano ang ilalagay sa profile nila bukod sa pangalan at posisyon.</p>
       </Section>
 
       <Section id="private" title="3. Ano ang nananatiling pribado">
@@ -159,7 +158,7 @@ export function PrivacyFil({ org, contact, version, pendingDays }: NoticeProps) 
           <li>Email, numero ng telepono at password ng mga opisyal (ang password ay nakatago lang bilang isang hindi na maibabalik na pagkakagulo na walang makababasa).</li>
           <li>Mga resibong itinago ng treasurer, halimbawa ang may pangalan o pirma ng isang pribadong tao.</li>
           <li>Mga larawan ng sulat-kamay na tala ng pulong, na ang secretary at Chairperson lang ang nakakakita.</li>
-          <li>Mga draft na hindi pa naaprubahan, at ang tala na isinusulat ng opisyal kapag humihiling ng account.</li>
+          <li>Mga draft na hindi pa naaprubahan.</li>
         </ul>
       </Section>
 
@@ -173,7 +172,7 @@ export function PrivacyFil({ org, contact, version, pendingDays }: NoticeProps) 
 
       <Section id="officials" title="5. Kung opisyal ka">
         <ul>
-          <li><b>Paghiling ng account:</b> kinukuha namin ang iyong pangalan, email, posisyon, password at isang tala para masuri ka ng site admin sa listahan ng mga halal na opisyal. Binubura ang hiling na hindi tinanggap. Binubura ang hiling na walang sumagot pagkalipas ng {pendingDays} araw.</li>
+          <li><b>Pagkakaroon ng account:</b> walang sign-up. Ang site admin ang gumagawa ng account ng Chairperson, at ang Chairperson ang nagdadagdag sa iba pang bahagi ng konseho, gamit ang iyong pangalan, email, posisyon at pansamantalang password. Papalitan mo ang password ng sarili mong password sa unang pag-log in mo.</li>
           <li><b>Nabigong pag-log in:</b> para mapigilan ang panghuhula ng password, itinatago nang hanggang isang araw ang email na sinubukan at ang internet address na pinanggalingan, at binubura agad kapag tama na ang pag-log in mo.</li>
           <li><b>Kapag tapos na ang termino mo:</b> hindi ka na makakapag-log in, at ililista ka bilang dating opisyal. Nananatili ang inilathala mo habang nasa puwesto, bilang bahagi ng pampublikong rekord.</li>
           <li><b>Pag-alis:</b> mabubura ng site admin ang iyong account. Buburahin ang iyong email, password, telepono, larawan at profile. Mananatili lang ang pangalan mo sa mga rekord na inilathala mo habang nasa puwesto.</li>

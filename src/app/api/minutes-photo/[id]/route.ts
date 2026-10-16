@@ -1,4 +1,4 @@
-import { imageResponse } from "@/lib/image-response";
+import { servePhoto } from "@/lib/image-response";
 import { sql, type Row } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 
@@ -12,5 +12,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     select p.data, p.type, m.author_id from minutes_photos p join minutes m on m.id = p.minutes_id where p.id = ${id}`;
   if (!row || (viewer.role !== "chairperson" && row.author_id !== viewer.id)) return new Response("Not found", { status: 404 });
 
-  return imageResponse(row.data as Buffer, row.type as string, "private, max-age=86400");
+  return servePhoto(row.data as Buffer, row.type as string, "private, max-age=86400");
 }

@@ -21,14 +21,12 @@ it with the municipal Data Protection Officer.
 
 | Data | About | Where | Who can see it | Kept until | Why |
 | --- | --- | --- | --- | --- | --- |
-| Name, position, committee, term | Officials | `users` | Public | Erased on request; the name stays on records published in office | RA 10742 §8(i) full public disclosure; officials agree when requesting an account |
+| Name, position, committee, term | Officials | `users` | Public | Erased on request; the name stays on records published in office | RA 10742 §8(i) full public disclosure; officials agree the first time they log in |
 | Photo, bio, credentials, contributions, purok, skills | Officials | `users` | Public (photo and profile), only if the official fills them in | The official deletes them, or the account is erased | The official's own choice to publish |
 | Email, phone | Officials | `users` | The official; the site admin (email); other officials (phone) | Account erased | Logging in; contact within the council |
 | Password | Officials | `users`, as a bcrypt hash only | Nobody; it cannot be read back | Account erased | Logging in |
-| Account request note | People asking for an account | `users.request_note` | Site admin only | Approved or turned down (turned down = deleted); unanswered requests deleted after 30 days | Checking the person is an elected official |
 | Privacy acceptance (date, version) | Officials | `users` | Site admin | Account erased | Proof of consent |
 | Failed log-in attempts: email tried, internet address | Anyone who mistypes | `login_attempts` | Nobody through the site | Up to 1 day; cleared on a correct log-in | Stopping password guessing |
-| Account request count per internet address | People requesting accounts | `login_attempts` | Nobody through the site | Up to 1 day | Stopping floods of fake requests |
 | Audit log: who did what, when | Officials | `audit_log` | Chairperson (recent activity) | Kept as part of the record | Accountability |
 | Minutes, reports, project updates | Whoever is named in them | `minutes`, `reports`, `project_updates` | Public once approved | Kept as part of the public record | RA 10742 disclosure |
 | Ledger and receipt photos | Payees, vendors on receipts | `transactions`, `transaction_receipts` | Public unless the treasurer hides the receipt | Kept as part of the public record | RA 10742 disclosure; COA |
@@ -39,7 +37,7 @@ it with the municipal Data Protection Officer.
 
 **Collected from visitors: nothing** beyond the language cookie and the hosting service's
 request logs. No analytics, no ads, no tracking. **Collected from anyone under 18: nothing.**
-Photos lose their EXIF metadata (including GPS location) before they are stored.
+Photos lose their EXIF metadata (including GPS location) and are squeezed to a small size before they are stored, and each photo is then **encrypted** (AES-256-GCM, a different random value for every photo) with a key that is kept outside the database. Someone who obtains a copy of the database, such as a leaked connection string or a stolen backup, sees scrambled bytes, not receipts, handwritten notes or faces. Photos are decrypted only for the moment they are served to someone allowed to see them. Everything travels over HTTPS.
 
 ## The rule for what gets published
 
