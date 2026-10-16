@@ -9,10 +9,11 @@ import { narrateReport } from "@/lib/ai";
 import { fmtDate, peso, todayManila } from "@/lib/format";
 import type { ReportData, ReportLine } from "@/lib/types";
 import { decodeImage } from "@/lib/images";
+import { encryptPhoto } from "@/lib/crypto";
 import { centavosToNumeric, parsePesoInput, sumCentavos, toCentavos, toPesos } from "@/lib/money";
 
 const MAX_RECEIPTS = 3;
-const MAX_RECEIPT_BYTES = 1_200_000; // photos are shrunk to about 1600 px in the browser first
+const MAX_RECEIPT_BYTES = 1_000_000; // 1 MB hard limit. The browser squeezes photos to about 250 KB first (client-image.ts)
 
 /** Receipt photos sent with a form. Returns null if any of them is not a usable image. */
 function receiptPhotos(fd: FormData) {
@@ -24,7 +25,7 @@ function receiptPhotos(fd: FormData) {
 
 async function saveReceipts(txId: number, photos: { bytes: Buffer; type: string }[], isPublic: boolean, userId: number) {
   for (const p of photos) {
-    await sql`insert into transaction_receipts (transaction_id, data, type, is_public, created_by) values (${txId}, ${p.bytes}, ${p.type}, ${isPublic}, ${userId})`;
+    await sql`insert into transaction_receipts (transaction_id, data, type, is_public, created_by) values (${txId}, ${encryptPhoto(p.bytes)}, ${p.type}, ${isPublic}, ${userId})`;
   }
 }
 

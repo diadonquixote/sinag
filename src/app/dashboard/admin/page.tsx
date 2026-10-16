@@ -32,9 +32,22 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
       order by case status when 'active' then 0 when 'disabled' then 1 else 2 end, case role when 'admin' then 0 when 'chairperson' then 1 when 'secretary' then 2 when 'treasurer' then 3 else 4 end, name`,
   ]);
 
+  const hasChair = accounts.some((a) => a.role === "chairperson" && a.status === "active");
+  const adminCount = accounts.filter((a) => a.role === "admin" && a.status === "active").length;
+
   return (
     <div className="space-y-12">
       <Flash sp={sp} />
+      {!hasChair && (
+        <div role="alert" className="max-w-2xl rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900">
+          <b>There is no active Chairperson.</b> Nothing can be approved or published, and nobody can add the council, until you create the next Chairperson below. Everything already published stays online.
+        </div>
+      )}
+      {adminCount < 2 && (
+        <div role="note" className="max-w-2xl rounded-lg border border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">
+          <b>You are the only site admin.</b> If you lose your password or leave, nobody can create accounts here. Name a second admin now (see docs/TURNOVER.md); until then, <code>npm run db:admin</code> can create one from the server.
+        </div>
+      )}
       <PageHeader eyebrow="Site admin" title="Accounts" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>
         Nobody can sign up on their own. You create the SK Chairperson&apos;s account below, after checking them against the official list of elected officials. The Chairperson then adds the secretary, treasurer and kagawads from their Team page. You can still create or fix any account here.
       </PageHeader>
@@ -149,7 +162,7 @@ export default async function AdminDesk({ searchParams }: { searchParams: Promis
         <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
           <li>Mark each outgoing official <b>Term ended</b>. They are logged out and listed as former officials; everything they published stays.</li>
           <li>Create the new Chairperson&apos;s account above, after checking the official list. They add the rest of their council from their Team page.</li>
-          <li>If you are handing the admin role over too: create the new admin above, let them log in, and have them mark your account as turned off.</li>
+          <li>If you are handing the admin role over too: create the new admin above, let them log in, and have them turn off your account. You cannot turn off your own, so the site always has an admin. Full checklist: docs/TURNOVER.md.</li>
           <li>Hand over the hosting, database and code accounts as well. The checklist is in docs/OPERATIONS.md.</li>
         </ol>
       </section>

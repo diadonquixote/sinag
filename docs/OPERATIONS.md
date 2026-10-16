@@ -39,7 +39,7 @@ The admin's **Accounts** page:
 - **Reset password** sets a temporary one and logs the person out everywhere. Share it privately.
   The Chairperson can do the same for their own team from the Team page.
 - **Turn off account** logs them out at once. Their records stay.
-- **Term ended** for an outgoing official: logged out, listed as a former official.
+- **Term ended** for an outgoing official: logged out, listed as a former official. The Chairperson does this for their own team from the Team page; the admin does it for the Chairperson.
 - **Remove** erases email, password, phone, photo and profile; the name stays only on what they
   published in office. Turn the account off first.
 
@@ -48,7 +48,7 @@ can reset the password.
 
 ## End of term
 
-When a new council takes office:
+The full turnover guide, with a checklist, is in [TURNOVER.md](TURNOVER.md). In short, when a new council takes office:
 
 1. Mark each outgoing official **Term ended**.
 2. Create the new Chairperson's account, checked against the official list. They add the rest
@@ -72,7 +72,7 @@ When a new council takes office:
 **A password or key was exposed** (pasted into a chat, a screenshot, a commit): replace it, don't
 hope. Database: reset the role's password in Neon, put the new connection string in Vercel's
 `DATABASE_URL`, redeploy. `AUTH_SECRET`: set a new one in Vercel and redeploy; everyone is logged
-out once.
+out once. `PHOTO_ENCRYPTION_KEY`: do not simply replace it, or the stored photos become unreadable; decrypt and re-encrypt them with the new key first.
 
 **Personal data may have been exposed:** the council must notify the National Privacy
 Commission and the people affected within 72 hours of learning of it (IRR Section 38). The steps

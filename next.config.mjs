@@ -58,6 +58,11 @@ function checkEnvironment() {
   else if (secret.length < 16) problems.push("AUTH_SECRET is too short. Use 32 or more random characters: openssl rand -base64 32");
   else if (secret.length < 32) console.warn("\n  Warning: AUTH_SECRET is shorter than 32 characters. Consider a longer one: openssl rand -base64 32\n");
 
+  const photoKey = (process.env.PHOTO_ENCRYPTION_KEY || "").trim();
+  const photoKeyBytes = /^[0-9a-fA-F]{64}$/.test(photoKey) ? 32 : Buffer.from(photoKey, "base64").length;
+  if (!photoKey) problems.push("PHOTO_ENCRYPTION_KEY is not set. Photos are encrypted before they are stored. Make a key with: openssl rand -base64 32 (and keep a copy somewhere safe: without it the photos cannot be read).");
+  else if (photoKeyBytes !== 32) problems.push("PHOTO_ENCRYPTION_KEY must be 32 random bytes. Make one with: openssl rand -base64 32");
+
   if (!(process.env.NEXT_PUBLIC_ORG_NAME || "").trim()) {
     console.warn("\n  Warning: NEXT_PUBLIC_ORG_NAME is not set, so the site will just say \"Sangguniang Kabataan\".\n");
   }

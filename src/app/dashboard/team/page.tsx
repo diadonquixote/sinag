@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { ROLE_LABEL, TEAM_LIMITS, TEAM_ROLES, type Role } from "@/lib/roles";
 import Avatar from "@/components/Avatar";
 import SubmitButton from "@/components/SubmitButton";
-import { addOfficial, resetTeamPassword } from "@/actions/team";
+import { addOfficial, endTeamTerm, resetTeamPassword } from "@/actions/team";
 
 export const metadata = { title: "Team" };
 
@@ -19,7 +19,7 @@ export default async function Team({ searchParams }: { searchParams: Promise<Rec
   return (
     <div className="space-y-8">
       <Flash sp={sp} />
-      <PageHeader eyebrow="Chairperson desk" title="SK team" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>Everyone who can log in to an official desk. Nobody can sign up on their own: you add your secretary, treasurer and kagawads here, and the site admin handles your own account.</PageHeader>
+      <PageHeader eyebrow="Chairperson desk" title="SK team" size="md" action={<Link href="/council" className="btn-outline">View the public council page</Link>}>Everyone who can log in to an official desk. Nobody can sign up on their own: you add your secretary, treasurer and kagawads here, and the site admin handles your own account. When someone leaves, mark their term as ended and add their replacement.</PageHeader>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {team.map((u) => (
           <li key={u.id} className="card space-y-3 py-4">
@@ -39,6 +39,16 @@ export default async function Team({ searchParams }: { searchParams: Promise<Rec
                   <input type="hidden" name="id" value={u.id} />
                   <div className="min-w-0 flex-1"><label className="label text-xs" htmlFor={`reset-${u.id}`}>New temporary password</label><input id={`reset-${u.id}`} name="password" type="text" required minLength={8} autoComplete="off" className="input py-2 text-sm" /></div>
                   <SubmitButton className="btn-outline btn-sm" pending="Saving...">Set</SubmitButton>
+                </form>
+              </details>
+            )}
+            {TEAM_ROLES.includes(u.role as Role) && (
+              <details className="text-sm">
+                <summary className="cursor-pointer font-semibold text-flag-blue">Term ended or left the council?</summary>
+                <form action={endTeamTerm} className="mt-2 space-y-2">
+                  <input type="hidden" name="id" value={u.id} />
+                  <p className="hint mt-0">They can no longer log in and are listed as a former official. What they published stays on the record. Their seat becomes free for the next person.</p>
+                  <SubmitButton className="btn-outline btn-sm text-flag-red" pending="Saving...">Term ended</SubmitButton>
                 </form>
               </details>
             )}

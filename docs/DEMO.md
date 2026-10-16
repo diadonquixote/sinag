@@ -39,6 +39,7 @@ reset without going near the real council's deployment.
    | --- | --- |
    | `DATABASE_URL` | the demo database |
    | `AUTH_SECRET` | its own secret: `openssl rand -base64 32` |
+   | `PHOTO_ENCRYPTION_KEY` | its own key: `openssl rand -base64 32` |
    | `NEXT_PUBLIC_ORG_NAME` | `SK ng Barangay Halimbawa (Demo)` |
    | `SINAG_STAGE` | `demo` |
    | `DEMO_PASSWORD` | the same as `SEED_PASSWORD` above |

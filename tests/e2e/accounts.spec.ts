@@ -108,7 +108,35 @@ test("the admin adds a Chairperson, who adds their council; both choose their ow
   await login(second, email, "second-password-456");
   await expect(second.getByRole("alert").filter({ hasText: "not active" })).toBeVisible();
 
-  await Promise.all([first.close(), adminCtx.close(), chairCtx.close(), secondCtx.close()]);
+  // 7. Turnover: the Chairperson ends a team member's term. They cannot log in any more,
+  //    and the seat is free for the next person.
+  const leaverName = `Leaver Test ${stamp}`;
+  const leaverEmail = `leaver.${stamp}@test.ph`;
+  await chair.goto("/dashboard/team");
+  const addLeaver = chair.locator("form").filter({ has: chair.getByRole("button", { name: "Add official" }) });
+  await addLeaver.getByLabel("Full name", { exact: true }).fill(leaverName);
+  await addLeaver.getByLabel("Email", { exact: true }).fill(leaverEmail);
+  await addLeaver.getByLabel("Position", { exact: true }).selectOption("kagawad");
+  await addLeaver.getByLabel("Temporary password", { exact: true }).fill("leaver-password-1");
+  await addLeaver.getByRole("button", { name: "Add official" }).click();
+  await expect(chair.getByRole("status").filter({ hasText: "can now log in" })).toBeVisible();
+
+  const card = chair.locator("li", { hasText: leaverName });
+  await card.locator("summary", { hasText: "Term ended or left" }).click();
+  await card.getByRole("button", { name: "Term ended" }).click();
+  await expect(chair.getByRole("status").filter({ hasText: "former official" })).toBeVisible();
+  await expect(chair.locator("li", { hasText: leaverName })).toHaveCount(0);
+
+  const leaverCtx = await browser.newContext();
+  const leaver = await leaverCtx.newPage();
+  await login(leaver, leaverEmail, "leaver-password-1");
+  await expect(leaver.getByRole("alert").filter({ hasText: "not active" })).toBeVisible();
+
+  // ...and they are listed as a former official on the public council page
+  await leaver.goto("/council");
+  await expect(leaver.getByText(leaverName).first()).toBeVisible();
+
+  await Promise.all([first.close(), adminCtx.close(), chairCtx.close(), secondCtx.close(), leaverCtx.close()]);
 });
 
 test("the official desks refuse the wrong role", async ({ page }, info) => {

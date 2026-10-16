@@ -37,8 +37,17 @@ describe("build-time settings check", () => {
       expect(() => config(PHASE_PRODUCTION_BUILD)).toThrow(/AUTH_SECRET is too short/);
     });
   });
+  it("stops a build with no photo key, or a key of the wrong size", () => {
+    const ok = { DATABASE_URL: "postgres://u:p@h/db", AUTH_SECRET: "x".repeat(44), SKIP_ENV_CHECK: undefined };
+    withEnv({ ...ok, PHOTO_ENCRYPTION_KEY: undefined }, () => {
+      expect(() => config(PHASE_PRODUCTION_BUILD)).toThrow(/PHOTO_ENCRYPTION_KEY is not set/);
+    });
+    withEnv({ ...ok, PHOTO_ENCRYPTION_KEY: "dG9vc2hvcnQ=" }, () => {
+      expect(() => config(PHASE_PRODUCTION_BUILD)).toThrow(/must be 32 random bytes/);
+    });
+  });
   it("passes with proper settings, and does not check outside builds", () => {
-    withEnv({ DATABASE_URL: "postgresql://u:p@h/db", AUTH_SECRET: "x".repeat(44), NEXT_PUBLIC_ORG_NAME: "SK ng Test" }, () => {
+    withEnv({ DATABASE_URL: "postgresql://u:p@h/db", AUTH_SECRET: "x".repeat(44), PHOTO_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"), NEXT_PUBLIC_ORG_NAME: "SK ng Test" }, () => {
       expect(() => config(PHASE_PRODUCTION_BUILD)).not.toThrow();
     });
     withEnv({ DATABASE_URL: undefined, AUTH_SECRET: undefined }, () => {

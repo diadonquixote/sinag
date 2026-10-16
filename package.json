@@ -11,6 +11,7 @@
     "db:setup": "node scripts/db-setup.mjs",
     "db:seed": "node scripts/db-setup.mjs --seed",
     "db:passwords": "node scripts/reset-demo-passwords.mjs",
+    "db:encrypt-photos": "node scripts/encrypt-photos.mjs",
     "db:admin": "node scripts/make-account.mjs --admin",
     "db:chair": "node scripts/make-account.mjs",
     "lint": "eslint .",

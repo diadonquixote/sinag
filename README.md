@@ -78,6 +78,7 @@ This is not a portfolio piece. It is meant to be used.
   so they are exact ([`src/lib/money.ts`](src/lib/money.ts)).
 - **Accounts are checked.** Nobody can sign up. The site admin creates the Chairperson's
   account against the official list, and the Chairperson adds the rest of the council.
+- **Photos are encrypted** before they are stored (AES-256-GCM), so a copy of the database alone shows no receipts or notes.
 - **Everything important is logged** in an audit trail.
 - **The code is open** under the AGPL-3.0, so anyone can check how the numbers are worked out.
 
@@ -108,13 +109,13 @@ A pilot with one council. What is checked on every change, in
 [CI](.github/workflows/ci.yml):
 
 - lint (ESLint, Next.js rules), the TypeScript type check, and a production `next build`
-- unit tests (money, uploads, translations, security headers, settings) and database tests
+- unit tests (money, the fund summary, photo encryption and compression, uploads, translations, security headers, settings) and database tests
   against Postgres 16, with `db:setup` run twice to prove it is safe to repeat
 - browser tests (Playwright, desktop and phone sizes) on a real build: every public page loads
   with no errors under the security policy, both languages work, and the whole account life
   cycle works (admin creates the Chairperson → Chairperson adds a kagawad → each must choose
   their own password → a password change logs out other devices → account
-  turned off)
+  turned off → the Chairperson ends a term)
 - Lighthouse on phone settings for five public pages, with the scores and any failed checks
   reported on the run
 
@@ -139,9 +140,10 @@ see it on a phone.
 
 | | |
 | --- | --- |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Run it on your computer, the tests, the project layout, adding text in both languages |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | For contributors: the tests, the project layout, adding text in both languages |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Put it online for a council, every setting, upgrading safely |
-| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Looking after a live site: backups, accounts, the end of a term, incidents |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Looking after a live site: backups, accounts, incidents |
+| [docs/TURNOVER.md](docs/TURNOVER.md) | When an official, the Chairperson or the site admin leaves: who does what, and which accounts and secrets to hand over |
 | [docs/PRIVACY.md](docs/PRIVACY.md) | What personal data is held, where, for how long, and the breach plan |
 | [docs/DEMO.md](docs/DEMO.md) | Running a public demo with made-up data |
 | [SECURITY.md](SECURITY.md) | Reporting a security problem |

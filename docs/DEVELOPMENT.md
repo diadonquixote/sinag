@@ -13,7 +13,7 @@ For putting it online, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ```bash
 npm install
-cp .env.example .env.local     # set DATABASE_URL and AUTH_SECRET at least
+cp .env.example .env.local     # set DATABASE_URL, AUTH_SECRET and PHOTO_ENCRYPTION_KEY at least
 npm run db:setup               # creates the tables; safe to re-run
 npm run db:seed                # demo people and records (needs SEED_PASSWORD in .env.local)
 npm run dev                    # http://localhost:3000
@@ -35,6 +35,7 @@ If a page shows up without its styling after switching branches, stop `npm run d
 | --- | --- | --- |
 | `DATABASE_URL` | yes | Postgres connection string. On Vercel, use the pooled one |
 | `AUTH_SECRET` | yes | 32+ random characters that sign login cookies: `openssl rand -base64 32` |
+| `PHOTO_ENCRYPTION_KEY` | yes | 32 random bytes that encrypt stored photos: `openssl rand -base64 32`. Losing it makes the stored photos unreadable, so keep a copy |
 | `NEXT_PUBLIC_ORG_NAME` | recommended | Whose records these are, e.g. `SK ng Barangay San Isidro`. Baked in at build time |
 | `SINAG_STAGE` | no | `pilot` (default: banner saying paper copies are official), `live` (no banner), `demo` (made-up data, demo logins shown) |
 | `PRIVACY_CONTACT_NAME`, `PRIVACY_CONTACT_EMAIL` | once named | The council's privacy officer, shown on the privacy notice |
@@ -43,7 +44,7 @@ If a page shows up without its styling after switching branches, stop `npm run d
 | `SEED_PASSWORD` | local only | Password for the demo accounts `db:seed` creates |
 | `GEMINI_API_KEY`, `GROQ_API_KEY`, `AI_PROVIDER`, `AI_MODEL`, `AI_VISION_MODEL`, `AI_BASE_URL`, `AI_API_KEY` | no | The AI assistants. Off in v1; see below |
 
-A production build refuses to start without `DATABASE_URL` and `AUTH_SECRET`, and says which
+A production build refuses to start without `DATABASE_URL`, `AUTH_SECRET` and `PHOTO_ENCRYPTION_KEY`, and says which
 one is missing. (`SKIP_ENV_CHECK=1` turns that off for a build that deliberately has no database.)
 
 ## Checks

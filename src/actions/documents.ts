@@ -11,9 +11,10 @@ import { todayManila } from "@/lib/format";
 import type { MinutesData } from "@/lib/types";
 import type { Role } from "@/lib/roles";
 import { decodeImage } from "@/lib/images";
+import { encryptPhoto } from "@/lib/crypto";
 
 const MAX_NOTE_PHOTOS = 6;
-const MAX_NOTE_PHOTO_BYTES = 1_200_000; // photos are shrunk to about 1600 px in the browser first
+const MAX_NOTE_PHOTO_BYTES = 1_000_000; // 1 MB hard limit. The browser squeezes photos to about 250 KB first (client-image.ts)
 
 /**
  * Minutes and financial reports share one workflow:
@@ -119,7 +120,7 @@ function notePhotos(fd: FormData) {
 
 async function savePhotos(minutesId: number, photos: { bytes: Buffer; type: string }[], startPage: number) {
   for (const [i, p] of photos.entries()) {
-    await sql`insert into minutes_photos (minutes_id, page, data, type) values (${minutesId}, ${startPage + i + 1}, ${p.bytes}, ${p.type})`;
+    await sql`insert into minutes_photos (minutes_id, page, data, type) values (${minutesId}, ${startPage + i + 1}, ${encryptPhoto(p.bytes)}, ${p.type})`;
   }
 }
 
