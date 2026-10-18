@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 /**
  * Database tests. They run against DATABASE_URL after `npm run db:setup` (CI does this),
  * each inside a transaction that is rolled back, so they never leave anything behind.

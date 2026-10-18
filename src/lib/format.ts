@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 const TZ = "Asia/Manila";
 
 /** Accepts a Date, a full ISO timestamp, or a plain "YYYY-MM-DD" date. */

@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 import SunRays from "./SunRays";
 
 /** Two-panel frame for the log in and sign up pages. The blue panel only shows on wide screens. */

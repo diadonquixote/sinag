@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 // Creates the Sinag tables, and optionally loads demo data.
 //   npm run db:setup          -> create tables (safe to re-run)
 //   npm run db:seed           -> create tables + load demo accounts and sample data

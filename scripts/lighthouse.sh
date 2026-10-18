@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+# Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
 # Measures public pages with Lighthouse (phone settings) and reports each page's scores, and the
 # checks it did not pass, as notices on the CI run. Needs a production build and a database.
 set -u

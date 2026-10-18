@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 /**
  * The hero sun: the Sinag mark at poster scale and in motion.
  *  - Eight long bevelled rays (gold into the flag's blue and red) and eight fine gold rays turn together.

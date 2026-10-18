@@ -21,7 +21,7 @@ reset without going near the real council's deployment.
    git push demo v1:main
    ```
    To bring it up to date later, run the same push again.
-3. It stays under the AGPL-3.0, like this repository.
+3. It carries the same all-rights-reserved license as this repository (see `LICENSE`).
 
 ## Setting it up
 

@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 /**
  * The fund summary against a real database. Like schema.test.ts, it runs inside a transaction
  * that is rolled back, and is skipped without DATABASE_URL. It compares against the figures

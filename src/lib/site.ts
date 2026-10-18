@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 /**
  * Facts about this deployment that pages share.
  *
@@ -14,7 +18,7 @@ export function siteStage(): Stage {
   return v === "live" || v === "demo" ? v : "pilot";
 }
 
-/** The public source code. AGPL-3.0 asks that people using the site can get the code; this is where. */
+/** The public source code, published for transparency. It is all rights reserved: see LICENSE. */
 export const SOURCE_URL = (process.env.NEXT_PUBLIC_SOURCE_URL || "").trim() || "https://github.com/diadonquixote/sinag";
 
 /** PDYN Technologies' public contact address. */

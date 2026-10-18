@@ -1,7 +1,7 @@
 # Sinag
 
 [![CI](https://github.com/diadonquixote/sinag/actions/workflows/ci.yml/badge.svg?branch=v1)](https://github.com/diadonquixote/sinag/actions/workflows/ci.yml)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![License: All rights reserved](https://img.shields.io/badge/license-All%20rights%20reserved-red.svg)](LICENSE)
 
 **Sinag** means *a ray of light*. It is a public record for Sangguniang Kabataan (SK) councils
 in the Philippines: the council records what it decides, schedules and spends, and anyone can
@@ -80,7 +80,7 @@ This is not a portfolio piece. It is meant to be used.
   account against the official list, and the Chairperson adds the rest of the council.
 - **Photos are encrypted** before they are stored (AES-256-GCM), so a copy of the database alone shows no receipts or notes.
 - **Everything important is logged** in an audit trail.
-- **The code is open** under the AGPL-3.0, so anyone can check how the numbers are worked out.
+- **The code is public to read**, so anyone can check how the numbers are worked out. It is all rights reserved.
 
 ## Security
 
@@ -157,6 +157,6 @@ Next.js 15 (App Router, server actions), React 19, TypeScript, Tailwind CSS, Pos
 
 Copyright © 2026 Kristina Diane Aviles, PDYN Technologies.
 
-Sinag is free software: you can redistribute it and/or modify it under the terms of the
-[GNU Affero General Public License, version 3](LICENSE). If you run a modified version for others
-over a network, you must offer them its source code. The footer of every page links to it.
+All rights reserved. Sinag is proprietary software: Kristina Diane Aviles is the only person
+allowed to edit it. No one else may modify, copy, redistribute or deploy it without her written
+permission. The code is public for transparency and may be read, nothing more. See [LICENSE](LICENSE).

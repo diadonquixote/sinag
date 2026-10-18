@@ -1,3 +1,5 @@
+-- Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+-- Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
 -- DEMO DATA ONLY. Fictional people and numbers so you can click through every screen.
 -- Run with:  npm run db:seed   (refuses to run if the database already has users)
 -- {{SEED_PASSWORD}} is replaced by scripts/db-setup.mjs.

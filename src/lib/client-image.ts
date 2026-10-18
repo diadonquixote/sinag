@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 /**
  * Browser-only helper: shrinks a photo so it uploads quickly, stays readable, and takes little
  * room in the database. Returns a JPEG data URL. Transparent areas become white.

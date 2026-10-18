@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 import Link from "next/link";
 import PdynLogo from "@/components/PdynLogo";
 import { PageHeader } from "@/components/ui";
@@ -74,11 +78,11 @@ export default async function AboutPage() {
             <p>{fil ? "Ang hindi nito kayang patunayan: na kumpleto ang naitala ng mga opisyal. Kung may alam kang gastos o pasya na wala rito, itanong sa SK." : "What it cannot prove: that officials have recorded everything. If you know of spending or a decision that is missing here, ask the SK."}</p>
           </Section>
 
-          <Section id="open" title={fil ? "Bukas ang code" : "Open source"}>
+          <Section id="open" title={fil ? "Bukas para basahin ang code" : "Open to read"}>
             {fil ? (
-              <p>Malayang software ang Sinag sa ilalim ng <A href="https://www.gnu.org/licenses/agpl-3.0.html">GNU AGPL-3.0</A>. Mababasa ng sinuman ang code sa <A href={SOURCE_URL}>GitHub</A>, at sinumang magpatakbo ng binagong bersyon online ay kailangang ilathala rin ang kanilang mga pagbabago. Mahalaga ito sa isang tool para sa transparency: makikita mo mismo kung paano kinukuwenta ang mga numero.</p>
+              <p>Mababasa ng sinuman ang code ng Sinag sa <A href={SOURCE_URL}>GitHub</A>, kaya makikita mo mismo kung paano kinukuwenta ang mga numero. Pero nakalaan ang lahat ng karapatan: si Kristina Diane Aviles lang ang may pahintulot na mag-edit nito.</p>
             ) : (
-              <p>Sinag is free software under the <A href="https://www.gnu.org/licenses/agpl-3.0.html">GNU AGPL-3.0</A>. Anyone can read the code on <A href={SOURCE_URL}>GitHub</A>, and anyone who runs a modified version online must publish their changes too. That matters for a transparency tool: you can check for yourself how the numbers are worked out.</p>
+              <p>Anyone can read the Sinag code on <A href={SOURCE_URL}>GitHub</A>, so you can check for yourself how the numbers are worked out. All rights are reserved, though: only Kristina Diane Aviles is allowed to edit it.</p>
             )}
           </Section>
 
@@ -89,13 +93,13 @@ export default async function AboutPage() {
               {fil ? (
                 <>
                   <p>Ang <b>PDYN Technologies</b> (Padayon Tech) ay isang technology startup sa Pilipinas, na pinamumunuan ng CEO nito na si <b>Kristina Diane Aviles</b>. Gumagawa ito ng praktikal na software para sa mga komunidad at lokal na institusyon, na may pokus sa pagiging bukas, malinaw at madaling gamitin.</p>
-                  <p>Ang Sinag ay isa sa mga produkto ng PDYN: isang pampublikong talaan para sa mga Sangguniang Kabataan, na bukas na source code at maaaring suriin ng sinuman.</p>
+                  <p>Ang Sinag ay isa sa mga produkto ng PDYN: isang pampublikong talaan para sa mga Sangguniang Kabataan, na mababasa at masusuri ng sinuman ang code.</p>
                   <p>Ang PDYN ang gumagawa at nagpapatakbo ng site. Ang konseho ang nagpapasya kung ano ang inilalathala, at ito ang may pananagutan sa nilalaman.</p>
                 </>
               ) : (
                 <>
                   <p><b>PDYN Technologies</b> (Padayon Tech) is a technology startup in the Philippines, led by its CEO, <b>Kristina Diane Aviles</b>. It builds practical software for communities and local institutions, with a focus on openness, clarity and ease of use.</p>
-                  <p>Sinag is one of PDYN&apos;s products: a public record for Sangguniang Kabataan councils, with open source code anyone can inspect.</p>
+                  <p>Sinag is one of PDYN&apos;s products: a public record for Sangguniang Kabataan councils, with code anyone can read and inspect.</p>
                   <p>PDYN builds and runs the site. The council decides what is published, and is responsible for what it says.</p>
                 </>
               )}

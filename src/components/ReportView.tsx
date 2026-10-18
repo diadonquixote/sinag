@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 import type { ReportData } from "@/lib/types";
 import { fmtDate, peso } from "@/lib/format";
 import { Stat } from "./ui";

@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 // Encrypts photos that were stored before photo encryption was added.
 //   npm run db:encrypt-photos
 // Needs DATABASE_URL and PHOTO_ENCRYPTION_KEY (the same key the site uses; see .env.example).

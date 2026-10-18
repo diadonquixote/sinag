@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 import { PageHeader } from "@/components/ui";
 import { getT } from "@/lib/i18n";
 import { ORG_NAME } from "@/lib/org";

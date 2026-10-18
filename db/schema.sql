@@ -1,3 +1,5 @@
+-- Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+-- Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
 -- Sinag database schema. Safe to run more than once.
 
 create extension if not exists pgcrypto;

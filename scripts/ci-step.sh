@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+# Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
 # Runs one CI step. If it fails, the end of its output is attached to the run as annotations
 # (split into pieces, since each annotation is short), so the failure can be read from the
 # GitHub API without downloading the log.

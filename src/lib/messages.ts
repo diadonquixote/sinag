@@ -1,3 +1,7 @@
+/*
+ * Sinag - Copyright (c) 2026 Kristina Diane Aviles, PDYN Technologies. All rights reserved.
+ * Proprietary software: only the copyright holder may edit, copy or distribute this code. See LICENSE.
+ */
 /**
  * Every piece of public-page text, in English and Filipino.
  *
@@ -45,12 +49,12 @@ export const en = {
   "footer.aboutHead": "About",
   "footer.about": "About this site",
   "footer.privacy": "Privacy notice",
-  "footer.source": "Source code (AGPL-3.0)",
+  "footer.source": "Source code (all rights reserved)",
   "footer.pdyn": "Who built Sinag",
   "footer.officials": "For SK officials",
   "footer.login": "Log in",
   "footer.request": "How officials get an account",
-  "footer.rights": "Sinag is free software under the GNU AGPL-3.0.",
+  "footer.rights": "Sinag is proprietary software. All rights reserved.",
   "footer.pdynLink": "PDYN Technologies, the startup that builds Sinag",
 
   // ---------------------------------------------------------------- shared bits
@@ -328,12 +332,12 @@ export const fil: Record<MessageKey, string> = {
   "footer.aboutHead": "Tungkol",
   "footer.about": "Tungkol sa site na ito",
   "footer.privacy": "Abiso sa privacy",
-  "footer.source": "Source code (AGPL-3.0)",
+  "footer.source": "Source code (all rights reserved)",
   "footer.pdyn": "Sino ang gumawa ng Sinag",
   "footer.officials": "Para sa mga opisyal ng SK",
   "footer.login": "Mag-log in",
   "footer.request": "Paano magkaroon ng account",
-  "footer.rights": "Ang Sinag ay malayang software sa ilalim ng GNU AGPL-3.0.",
+  "footer.rights": "Ang Sinag ay proprietary na software. Lahat ng karapatan ay nakalaan.",
   "footer.pdynLink": "PDYN Technologies, ang startup na gumagawa ng Sinag",
 
   "common.back": "Bumalik",
